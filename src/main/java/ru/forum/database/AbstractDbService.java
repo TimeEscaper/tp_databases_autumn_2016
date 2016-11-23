@@ -10,6 +10,7 @@ import java.sql.Connection;
 
 @SuppressWarnings("unused")
 public abstract class AbstractDbService {
+
     protected DataSource dataSource;
 
     protected Connection getConnection()  throws DbException {

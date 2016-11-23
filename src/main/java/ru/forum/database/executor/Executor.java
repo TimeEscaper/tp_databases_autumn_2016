@@ -23,4 +23,12 @@ public class Executor {
             }
         }
     }
+
+    public int execUpdate(Connection connection, String sqlUpdate) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            return statement.executeUpdate(sqlUpdate);
+        }
+    }
+
+
 }
