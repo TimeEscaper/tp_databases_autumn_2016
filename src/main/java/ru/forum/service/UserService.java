@@ -6,6 +6,7 @@ import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.database.executor.Executor;
 import ru.forum.model.UserDataSet;
+import ru.forum.model.UserFull;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -119,30 +120,29 @@ public class UserService extends AbstractDbService {
         }
     }
 
-    /*public UserFull getUserDetails(String follower, String followee) throws DbException {
+    public UserFull getUserDetails(String email) throws DbException {
 
         final Connection connection = getConnection();
         final StringBuilder sqlUpdate = new StringBuilder();
         try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
-
-            formatter.format("INSERT INTO Follow(follower, followee) VALUES ('%s', '%s');", follower, followee);
+            final List<String> followers = getAllFollowers(email);
+            final List<String> following = getAllFollowing(email);
+            final List<Long> subscriptions = getAllSubscription(email);
+            formatter.format("SELECT * FROM User WHERE email = '%s';", email);
             final Executor executor = new Executor();
             try {
-                final int updated = executor.execUpdate(connection, formatter.toString());
-
-                formatter.format("SELECT U.*, F1.follower, F2.followee, S.user FROM UserWHERE email = '%s'", email);
-                return executor.execQuery(connection, formatter.toString(), resultSet -> new UserFull(resultSet.getLong("id"),
-                        resultSet.getString("email"),
+                return executor.execQuery(connection, formatter.toString(), resultSet -> new UserFull(
+                        resultSet.getLong("id"),
+                        resultSet.getString("eamil"),
                         resultSet.getString("username"),
                         resultSet.getString("about"),
                         resultSet.getString("name"),
-                        resultSet.getBoolean("isAnonymous")));
+                        resultSet.getBoolean("isAnonymous"),
+                        followers, following, subscriptions));
+            } catch (SQLException e) {
+                throw new DbException("Unable to get user details!", e);
             }
-        } catch (SQLException e) {
-            throw new DbException("Unable to follow user!", e);
         }
-    }*/
-
-
+    }
 
 }
