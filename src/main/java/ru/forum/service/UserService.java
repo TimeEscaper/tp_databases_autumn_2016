@@ -145,4 +145,36 @@ public class UserService extends AbstractDbService {
         }
     }
 
+    public UserFull followUser(String follower, String followee) throws DbException {
+
+        final Connection connection = getConnection();
+        final StringBuilder sqlUpdate = new StringBuilder();
+        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
+            formatter.format("INSERT INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
+            final Executor executor = new Executor();
+            try {
+                final int update = executor.execUpdate(connection, formatter.toString());
+                return getUserDetails(follower);
+            } catch (SQLException e) {
+                throw new DbException("Unable to follow user!", e);
+            }
+        }
+    }
+
+    public UserFull unfollowUser(String follower, String followee) throws DbException {
+
+        final Connection connection = getConnection();
+        final StringBuilder sqlUpdate = new StringBuilder();
+        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
+            formatter.format("DELETE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
+            final Executor executor = new Executor();
+            try {
+                final int update = executor.execUpdate(connection, formatter.toString());
+                return getUserDetails(follower);
+            } catch (SQLException e) {
+                throw new DbException("Unable to unfollow user!", e);
+            }
+        }
+    }
+
 }
