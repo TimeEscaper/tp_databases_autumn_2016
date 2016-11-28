@@ -177,4 +177,78 @@ public class UserService extends AbstractDbService {
         }
     }
 
+    public List<UserFull> getListFollowers(String email, int limit, String order, int sinceId) throws DbException {
+        //TODO: переделать на один SELECT
+        final Connection connection = getConnection();
+        final StringBuilder sqlUpdate = new StringBuilder();
+        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
+            if (limit == 0)
+                formatter.format("SELECT Follow.follower FROM Follow JOIN User ON (Follow.follower = User.email)" +
+                        " WHERE (Follow.followee = '%s') " +
+                        "AND (id >= '%d') ORDER BY User.id '%s';", email, sinceId, order);
+            else
+                formatter.format("SELECT Follow.follower FROM Follow JOIN User ON (Follow.follower = User.email)" +
+                        " WHERE (Follow.followee = '%s') " +
+                        "AND (id >= '%d') ORDER BY User.id '%s' LIMIT %d;", email, sinceId, order, limit);
+
+            final Executor executor = new Executor();
+            try {
+
+                final List<String> followers = executor.execQuery(connection, formatter.toString(), resultSet -> {
+                    final List<String> followersArray = new ArrayList<>();
+                    while (resultSet.next())
+                        followersArray.add(resultSet.getString("follower"));
+                    return followersArray;
+                });
+
+                final List<UserFull> result = new ArrayList<>();
+                for (String follower : followers) {
+                    result.add(getUserDetails(follower));
+                }
+
+                return result;
+
+            } catch (SQLException e) {
+                throw new DbException("Unable to get followers!", e);
+            }
+        }
+    }
+
+    public List<UserFull> getListFollowing(String email, int limit, String order, int sinceId) throws DbException {
+        //TODO: переделать на один SELECT
+        final Connection connection = getConnection();
+        final StringBuilder sqlUpdate = new StringBuilder();
+        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
+            if (limit == 0)
+                formatter.format("SELECT Follow.followee FROM Follow JOIN User ON (Follow.followee = User.email)" +
+                        " WHERE (Follow.follower = '%s') " +
+                        "AND (id >= '%d') ORDER BY User.id '%s';", email, sinceId, order);
+            else
+                formatter.format("SELECT Follow.followee FROM Follow JOIN User ON (Follow.followee = User.email)" +
+                        " WHERE (Follow.follower = '%s') " +
+                        "AND (id >= '%d') ORDER BY User.id '%s' LIMIT %d;", email, sinceId, order, limit);
+
+            final Executor executor = new Executor();
+            try {
+
+                final List<String> followings = executor.execQuery(connection, formatter.toString(), resultSet -> {
+                    final List<String> followingsArray = new ArrayList<>();
+                    while (resultSet.next())
+                        followingsArray.add(resultSet.getString("followee"));
+                    return followingsArray;
+                });
+
+                final List<UserFull> result = new ArrayList<>();
+                for (String following : followings) {
+                    result.add(getUserDetails(following));
+                }
+
+                return result;
+
+            } catch (SQLException e) {
+                throw new DbException("Unable to get followings!", e);
+            }
+        }
+    }
+
 }
