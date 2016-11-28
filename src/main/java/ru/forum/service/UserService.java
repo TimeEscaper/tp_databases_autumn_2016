@@ -154,6 +154,7 @@ public class UserService extends AbstractDbService {
             final Executor executor = new Executor();
             try {
                 final int update = executor.execUpdate(connection, formatter.toString());
+
                 return getUserDetails(follower);
             } catch (SQLException e) {
                 throw new DbException("Unable to follow user!", e);
@@ -170,6 +171,7 @@ public class UserService extends AbstractDbService {
             final Executor executor = new Executor();
             try {
                 final int update = executor.execUpdate(connection, formatter.toString());
+
                 return getUserDetails(follower);
             } catch (SQLException e) {
                 throw new DbException("Unable to unfollow user!", e);
@@ -247,6 +249,22 @@ public class UserService extends AbstractDbService {
 
             } catch (SQLException e) {
                 throw new DbException("Unable to get followings!", e);
+            }
+        }
+    }
+
+    public UserFull updateUser(String user, String about, String name) throws DbException {
+        final Connection connection = getConnection();
+        final StringBuilder sqlUpdate = new StringBuilder();
+        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
+            formatter.format("UPDATE User (about, name) SET ('%s','%s') WHERE email = '%s';", about, name, user);
+            final Executor executor = new Executor();
+            try {
+                final int update = executor.execUpdate(connection, formatter.toString());
+
+                return getUserDetails(user);
+            } catch (SQLException e) {
+                throw new DbException("Unable to update profile!", e);
             }
         }
     }
