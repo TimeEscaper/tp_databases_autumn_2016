@@ -21,7 +21,7 @@ import java.util.Locale;
 public class UserService extends AbstractDbService {
 
     @Autowired
-    public UserService(DataSource dataSource) {
+    public UserService(DataSource dataSource) throws DbException {
         this.dataSource = dataSource;
     }
 
