@@ -49,4 +49,21 @@ public class ForumService extends AbstractDbService {
             }
         }
     }
+
+    //Get forum short info
+    public ForumDataSet getForum(String shortName) throws DbException {
+        formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ForumDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getString("name"),
+                    resultSet.getString("short_name"),
+                    resultSet.getString("user")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get forum dataset!", e);
+        }
+    }
+
+    
 }
