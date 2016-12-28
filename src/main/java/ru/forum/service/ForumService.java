@@ -6,6 +6,9 @@ import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.database.executor.Executor;
 import ru.forum.model.ForumDataSet;
+import ru.forum.model.PostFull;
+import ru.forum.model.ThreadDataSet;
+import ru.forum.model.UserDataSet;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -65,5 +68,51 @@ public class ForumService extends AbstractDbService {
         }
     }
 
-    
+    public ArrayList<PostFull> listPosts(String forum,
+                                         String since, Integer limit, String order, ArrayList<String> related) {
+
+        String postfix = "";
+        if (since != null) {
+            postfix += " WHERE Post.date > " + since;
+        }
+        if (order == null)
+            postfix += " ORDER BY Post.date desc";
+        else
+            postfix += "ORDER BY Post.date " + order;
+        if (limit != null)
+            postfix += " LIMIT " + limit.toString();
+        postfix += ";";
+
+        String tables = "SELECT Post.*";
+        String joins = "FROM Post";
+        for (String table : related) {
+            if (table.equals("forum")) {
+                tables += " , forum.*";
+                joins += " JOIN Forum ON(Post.forum = Forum.short_name)";
+            }
+            else if (table.equals("thread")) {
+                tables += " , Thread.*";
+                joins += " JOIN Thread ON(Post.thread = Thread.id)";
+            }
+            else if (table.equals("user")) {
+                tables += " , User.*";
+                joins += " JOIN User ON(Post.user = User.email)";
+            }
+        }
+
+        String query = tables + joins + postfix;
+
+        String forumClass = related.contains("forum") ? ForumDataSet.class.getName() : String.class.getName();
+        String threadClass = related.contains("thread") ? ThreadDataSet.class.getName() : String.class.getName();
+        String userClass = related.contains("user") ? UserDataSet.class.getName() : String.class.getName();
+
+        /*try {
+            executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        PostFull<forumClass,  >
+                    })
+        } */
+
+        return null;
+    }
 }
