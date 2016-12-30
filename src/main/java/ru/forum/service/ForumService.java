@@ -69,8 +69,8 @@ public class ForumService extends AbstractDbService {
     }
 
     public ArrayList<PostFull> listPosts(String forum,
-                                         String since, Integer limit, String order, ArrayList<String> related) {
-
+                                         String since, Integer limit, String order, ArrayList<String> related)
+            throws DbException {
         String postfix = "";
         if (since != null) {
             postfix += " WHERE Post.date > " + since;
@@ -100,18 +100,17 @@ public class ForumService extends AbstractDbService {
             }
         }
 
-        String query = tables + joins + postfix;
+        final String query = tables + joins + postfix;
 
-        String forumClass = related.contains("forum") ? ForumDataSet.class.getName() : String.class.getName();
-        String threadClass = related.contains("thread") ? ThreadDataSet.class.getName() : String.class.getName();
-        String userClass = related.contains("user") ? UserDataSet.class.getName() : String.class.getName();
-
-        /*try {
+        try {
             executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        PostFull<forumClass,  >
-                    })
-        } */
+                        //PostFull result = new PostFull();
+                        return null;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get posts or related data!", e);
+        }
 
         return null;
     }

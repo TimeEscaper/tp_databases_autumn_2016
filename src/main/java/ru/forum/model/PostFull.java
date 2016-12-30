@@ -1,12 +1,12 @@
 package ru.forum.model;
 
 @SuppressWarnings("unused")
-public class PostFull<T, F, U> {
+public class PostFull {
 
     private long id;
-    private T thread;
-    private F forum;
-    private U user;
+    private Object thread;
+    private Object forum;
+    private Object user;
     private String message;
     private String date;
     private long parent;
@@ -16,7 +16,7 @@ public class PostFull<T, F, U> {
     private boolean isSpam;
     private boolean isDeleted;
 
-    public PostFull(long id, T thread, F forum, U user, String message, String date, long parent,
+    public PostFull(long id, Object thread, Object forum, Object user, String message, String date, long parent,
                     boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
         this.id = id;
         this.thread = thread;
@@ -49,15 +49,15 @@ public class PostFull<T, F, U> {
         return id;
     }
 
-    public T getThread() {
+    public Object getThread() {
         return thread;
     }
 
-    public F getForum() {
+    public Object getForum() {
         return forum;
     }
 
-    public U getUser() {
+    public Object getUser() {
         return user;
     }
 
@@ -77,15 +77,15 @@ public class PostFull<T, F, U> {
         return isApproved;
     }
 
-    public void setThread(T thread) {
+    public void setThread(Object thread) {
         this.thread = thread;
     }
 
-    public void setForum(F forum) {
+    public void setForum(Object forum) {
         this.forum = forum;
     }
 
-    public void setUser(U user) {
+    public void setUser(Objects user) {
         this.user = user;
     }
 
