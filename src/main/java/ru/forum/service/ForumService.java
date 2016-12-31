@@ -68,6 +68,7 @@ public class ForumService extends AbstractDbService {
         }
     }
 
+    //TODO: check field names and cast
     public ArrayList<PostFull> listPosts(String forum,
                                          String since, Integer limit, String order, ArrayList<String> related)
             throws DbException {
@@ -105,8 +106,66 @@ public class ForumService extends AbstractDbService {
         try {
             executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        //PostFull result = new PostFull();
-                        return null;
+                        final List<PostFull> resuslt = new ArrayList<>();
+                        while (resultSet.next()) {
+                            final PostFull post = new PostFull(
+                                    resultSet.getLong("Post.id"),
+                                    resultSet.getString("Post.message"),
+                                    resultSet.getString("Post.date"),
+                                    resultSet.getLong("Post.parent"),
+                                    resultSet.getBoolean("Post.isApproved"),
+                                    resultSet.getBoolean("Post.isHighlighted"),
+                                    resultSet.getBoolean("Post.isEdited"),
+                                    resultSet.getBoolean("Post.isSpam"),
+                                    resultSet.getBoolean("Post.isDeleted")
+
+                            );
+
+                            if (related.contains("user")) {
+                                post.setUser(new UserDataSet(
+                                        resultSet.getLong("User.id"),
+                                        resultSet.getString("User.email"),
+                                        resultSet.getString("User.username"),
+                                        resultSet.getString("User.about"),
+                                        resultSet.getString("User.name"),
+                                        resultSet.getBoolean("User.isAnonymous")
+                                ));
+                            }
+                            else {
+                                post.setUser(resultSet.getString("Post.user"));
+                            }
+                            if (related.contains("forum")) {
+                                post.setForum(new ForumDataSet(
+                                        resultSet.getLong("Forum.id"),
+                                        resultSet.getString("Forum.name"),
+                                        resultSet.getString("Forum.shortName"),
+                                        resultSet.getString("Forum.user")
+                                ));
+                            }
+                            else {
+                                post.setForum(resultSet.getString("Post.forum"));
+                            }
+                            if (related.contains("thread")) {
+                                post.setThread(new ThreadDataSet(
+                                        resultSet.getLong("Thread.id"),
+                                        resultSet.getString("Thread.forum"),
+                                        resultSet.getString("Thread.user"),
+                                        resultSet.getString("Thread.date"),
+                                        resultSet.getString("Thread.title"),
+                                        resultSet.getString("Thread.slug"),
+                                        resultSet.getString("Thread.message"),
+                                        resultSet.getBoolean("Thread.isClosed"),
+                                        resultSet.getBoolean("Thread.isDeleted")
+                                ));
+                            }
+                            else {
+                                post.setThread(resultSet.getString("Post.thread"));
+                            }
+
+                            resuslt.add(post);
+                        }
+
+                        return resuslt;
                     });
         } catch (SQLException e) {
             throw new DbException("Unable to get posts or related data!", e);

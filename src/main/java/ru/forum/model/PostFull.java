@@ -85,7 +85,7 @@ public class PostFull {
         this.forum = forum;
     }
 
-    public void setUser(Objects user) {
+    public void setUser(Object user) {
         this.user = user;
     }
 
