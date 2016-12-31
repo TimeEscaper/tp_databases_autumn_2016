@@ -1,6 +1,7 @@
 package ru.forum.database;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import ru.forum.database.exception.DbException;
@@ -14,6 +15,7 @@ import java.util.Locale;
 @SuppressWarnings("unused")
 public abstract class AbstractDbService {
 
+    @Autowired
     protected DataSource dataSource;
 
     protected Connection dbConnection;

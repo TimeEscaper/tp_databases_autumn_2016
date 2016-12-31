@@ -20,10 +20,7 @@ import java.util.Locale;
 @Service
 public class UserService extends AbstractDbService {
 
-    @Autowired
-    public UserService(DataSource dataSource) throws DbException {
-        this.dataSource = dataSource;
-    }
+    public UserService() throws DbException { }
 
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {

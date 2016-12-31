@@ -18,10 +18,7 @@ import java.util.Locale;
 @Service
 public class ForumService extends AbstractDbService {
 
-    @Autowired
-    public ForumService(DataSource dataSource) throws DbException {
-        this.dataSource = dataSource;
-    }
+    public ForumService() throws DbException { }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
         final Connection connection = getConnection();
@@ -250,4 +247,7 @@ public class ForumService extends AbstractDbService {
             throw new DbException("Unable to get threads or related data!", e);
         }
     }
+
+
+
 }

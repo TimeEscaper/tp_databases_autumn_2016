@@ -10,8 +10,6 @@ import javax.sql.DataSource;
 @Service
 public class ThreadService extends AbstractDbService {
 
-    @Autowired
-    public ThreadService(DataSource dataSource) throws DbException {
-        this.dataSource = dataSource;
-    }
+    public ThreadService() throws DbException { }
+
 }

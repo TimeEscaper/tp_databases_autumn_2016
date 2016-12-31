@@ -11,8 +11,5 @@ import javax.sql.DataSource;
 @Service
 public class PostService extends AbstractDbService {
 
-    @Autowired
-    public PostService(DataSource dataSource) throws DbException {
-        this.dataSource = dataSource;
-    }
+    public PostService() throws DbException { }
 }
