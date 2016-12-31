@@ -6,6 +6,7 @@ import ru.forum.database.exception.DbException;
 import ru.forum.model.DataSet.ThreadDataSet;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 @Service
 public class ThreadService extends AbstractDbService {
@@ -58,5 +59,52 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    
+    //TODO: filter creator in utils
+    public ArrayList<ThreadDataSet> listThread(String filter, boolean isByUser,
+                                                     String since, Integer limit, String order) throws DbException {
+
+        String postfix;
+        if (isByUser)
+            postfix = " WHERE Thread.user = '" + filter + "'";
+        else
+            postfix = " WHERE Thread.forum = '" + filter + "'";
+
+        if (since != null) {
+            postfix += " AND Thread.date >= " + since;
+        }
+        if (order == null)
+            postfix += " ORDER BY Thread.date desc";
+        else
+            postfix += "ORDER BY Post.date " + order;
+        if (limit != null)
+            postfix += " LIMIT " + limit.toString();
+        postfix += ";";
+
+        String query = "SELECT * FROM Thread" + postfix;
+
+        try {
+            return executor.execQuery(getConnection(), query, resultSet -> {
+                ArrayList<ThreadDataSet> result = new ArrayList<>();
+                while (resultSet.next()) {
+                    ThreadDataSet thread = new ThreadDataSet(
+                            resultSet.getLong("id"),
+                            resultSet.getString("forum"),
+                            resultSet.getString("user"),
+                            resultSet.getString("date"),
+                            resultSet.getString("title"),
+                            resultSet.getString("slug"),
+                            resultSet.getString("message"),
+                            resultSet.getBoolean("isClosed"),
+                            resultSet.getBoolean("isDeleted")
+                    );
+                    result.add(thread);
+                }
+
+                return result;
+            });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get threads by user!", e);
+        }
+    }
+
 }
