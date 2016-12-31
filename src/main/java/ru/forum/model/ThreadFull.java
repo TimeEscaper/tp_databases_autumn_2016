@@ -11,13 +11,25 @@ public class ThreadFull {
     private boolean isClosed;
     private boolean isDeleted;
 
+    public ThreadFull(long id, String date, String title, String slug, String message, boolean isClosed,
+                      boolean isDeleted) {
+        this.id = id;
+        this.date = date;
+        this.title = title;
+        this.slug = slug;
+        this.message = message;
+        this.isClosed = isClosed;
+        this.isDeleted = isDeleted;
+    }
+
     public ThreadFull(long id, Object forum, Object user, String date, String title, String slug, String message,
-                         boolean isClosed, boolean isDeleted) {
+                      boolean isClosed, boolean isDeleted) {
         this.id = id;
         this.forum = forum;
         this.user = user;
         this.date = date;
         this.title = title;
+
         this.slug = slug;
         this.message = message;
         this.isClosed = isClosed;

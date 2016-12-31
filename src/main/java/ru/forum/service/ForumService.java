@@ -5,10 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.database.executor.Executor;
-import ru.forum.model.ForumDataSet;
-import ru.forum.model.PostFull;
-import ru.forum.model.ThreadDataSet;
-import ru.forum.model.UserDataSet;
+import ru.forum.model.*;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -72,9 +69,9 @@ public class ForumService extends AbstractDbService {
     public ArrayList<PostFull> listPosts(String forum,
                                          String since, Integer limit, String order, ArrayList<String> related)
             throws DbException {
-        String postfix = "";
+        String postfix = " WHERE Post.forum = '" + forum + "'";
         if (since != null) {
-            postfix += " WHERE Post.date > " + since;
+            postfix += " AND Post.date >= " + since;
         }
         if (order == null)
             postfix += " ORDER BY Post.date desc";
@@ -104,9 +101,9 @@ public class ForumService extends AbstractDbService {
         final String query = tables + joins + postfix;
 
         try {
-            executor.execQuery(getConnection(), query,
+            return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        final List<PostFull> resuslt = new ArrayList<>();
+                        final ArrayList<PostFull> result = new ArrayList<>();
                         while (resultSet.next()) {
                             final PostFull post = new PostFull(
                                     resultSet.getLong("Post.id"),
@@ -162,15 +159,95 @@ public class ForumService extends AbstractDbService {
                                 post.setThread(resultSet.getString("Post.thread"));
                             }
 
-                            resuslt.add(post);
+                            result.add(post);
                         }
 
-                        return resuslt;
+                        return result;
                     });
         } catch (SQLException e) {
             throw new DbException("Unable to get posts or related data!", e);
         }
+    }
 
-        return null;
+    public ArrayList<ThreadFull> listThreads(String forum,
+                                             String since, Integer limit, String order, ArrayList<String> related)
+        throws DbException {
+
+        String postfix = " WHERE Thread.forum = '" + forum + "'";
+        if (since != null) {
+            postfix += " AND Thread.date >= " + since;
+        }
+        if (order == null)
+            postfix += " ORDER BY Thread.date desc";
+        else
+            postfix += "ORDER BY Thread.date " + order;
+        if (limit != null)
+            postfix += " LIMIT " + limit.toString();
+        postfix += ";";
+
+        String tables = "SELECT Thread.*";
+        String joins = "FROM Thread";
+        for (String table : related) {
+            if (table.equals("forum")) {
+                tables += " , forum.*";
+                joins += " JOIN Forum ON(Thread.forum = Forum.short_name)";
+            }
+
+            else if (table.equals("user")) {
+                tables += " , User.*";
+                joins += " JOIN User ON(Thread.user = User.email)";
+            }
+        }
+
+        final String query = tables + joins + postfix;
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ArrayList<ThreadFull> result = new ArrayList<>();
+                        while (resultSet.next()) {
+                            final ThreadFull thread = new ThreadFull(
+                                    resultSet.getLong("Thred.id"),
+                                    resultSet.getString("Thread.date"),
+                                    resultSet.getString("Thread.title"),
+                                    resultSet.getString("Thread.slug"),
+                                    resultSet.getString("Thread.message"),
+                                    resultSet.getBoolean("Thread.isClosed"),
+                                    resultSet.getBoolean("Thread.isDeleted")
+                            );
+
+                            if (related.contains("user")) {
+                                thread.setUser(new UserDataSet(
+                                        resultSet.getLong("User.id"),
+                                        resultSet.getString("User.email"),
+                                        resultSet.getString("User.username"),
+                                        resultSet.getString("User.about"),
+                                        resultSet.getString("User.name"),
+                                        resultSet.getBoolean("User.isAnonymous")
+                                ));
+                            }
+                            else {
+                                thread.setUser(resultSet.getString("Post.user"));
+                            }
+                            if (related.contains("forum")) {
+                                thread.setForum(new ForumDataSet(
+                                        resultSet.getLong("Forum.id"),
+                                        resultSet.getString("Forum.name"),
+                                        resultSet.getString("Forum.shortName"),
+                                        resultSet.getString("Forum.user")
+                                ));
+                            }
+                            else {
+                                thread.setForum(resultSet.getString("Post.forum"));
+                            }
+
+                            result.add(thread);
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get threads or related data!", e);
+        }
     }
 }
