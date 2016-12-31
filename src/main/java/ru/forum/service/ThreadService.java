@@ -48,7 +48,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public long closeThread(long threadId) throws DbException {
-        formatter.format("UPDATE Thread (isClosed) SET (%d) WHERE id = %d", 1, threadId);
+        formatter.format("UPDATE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return -1;
@@ -104,6 +104,18 @@ public class ThreadService extends AbstractDbService {
             });
         } catch (SQLException e) {
             throw new DbException("Unable to get threads by user!", e);
+        }
+    }
+
+    public long openThread(long threadId) throws DbException {
+        formatter.format("UPDATE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return -1;
+            };
+            return threadId;
+        } catch (SQLException e) {
+            throw new DbException("Unable to open thread!", e);
         }
     }
 
