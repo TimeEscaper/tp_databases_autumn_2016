@@ -1,12 +1,10 @@
 package ru.forum.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.model.ThreadDataSet;
+import ru.forum.model.DataSet.ThreadDataSet;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 
 @Service

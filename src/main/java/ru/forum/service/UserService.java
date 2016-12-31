@@ -1,14 +1,12 @@
 package ru.forum.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.database.executor.Executor;
-import ru.forum.model.UserDataSet;
-import ru.forum.model.UserFull;
+import ru.forum.model.DataSet.UserDataSet;
+import ru.forum.model.Full.UserFull;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;

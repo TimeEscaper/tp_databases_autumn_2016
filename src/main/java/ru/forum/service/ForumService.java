@@ -1,18 +1,19 @@
 package ru.forum.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.database.executor.Executor;
-import ru.forum.model.*;
+import ru.forum.model.DataSet.ForumDataSet;
+import ru.forum.model.DataSet.ThreadDataSet;
+import ru.forum.model.DataSet.UserDataSet;
+import ru.forum.model.Full.PostFull;
+import ru.forum.model.Full.ThreadFull;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Formatter;
-import java.util.List;
 import java.util.Locale;
 
 @Service

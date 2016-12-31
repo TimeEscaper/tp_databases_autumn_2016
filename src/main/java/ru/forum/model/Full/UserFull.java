@@ -1,4 +1,4 @@
-package ru.forum.model;
+package ru.forum.model.Full;
 
 import java.util.ArrayList;
 import java.util.List;

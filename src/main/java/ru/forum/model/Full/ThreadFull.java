@@ -1,4 +1,4 @@
-package ru.forum.model;
+package ru.forum.model.Full;
 
 public class ThreadFull {
     long id;

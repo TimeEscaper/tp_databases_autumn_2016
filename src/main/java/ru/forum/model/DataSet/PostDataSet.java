@@ -1,12 +1,12 @@
-package ru.forum.model;
+package ru.forum.model.DataSet;
 
 @SuppressWarnings("unused")
-public class PostFull {
+public class PostDataSet {
 
     private long id;
-    private Object thread;
-    private Object forum;
-    private Object user;
+    private long thread;
+    private String forum;
+    private String user;
     private String message;
     private String date;
     private long parent;
@@ -16,8 +16,8 @@ public class PostFull {
     private boolean isSpam;
     private boolean isDeleted;
 
-    public PostFull(long id, Object thread, Object forum, Object user, String message, String date, long parent,
-                    boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
+    public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
+                       boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
         this.id = id;
         this.thread = thread;
         this.forum = forum;
@@ -32,32 +32,19 @@ public class PostFull {
         this.isDeleted = isDeleted;
     }
 
-    public PostFull(long id, String message, String date, long parent, boolean isApproved, boolean isHighlighted,
-                    boolean isEdited, boolean isSpam, boolean isDeleted) {
-        this.id = id;
-        this.message = message;
-        this.date = date;
-        this.parent = parent;
-        this.isApproved = isApproved;
-        this.isHighlighted = isHighlighted;
-        this.isEdited = isEdited;
-        this.isSpam = isSpam;
-        this.isDeleted = isDeleted;
-    }
-
     public long getId() {
         return id;
     }
 
-    public Object getThread() {
+    public long getThread() {
         return thread;
     }
 
-    public Object getForum() {
+    public String getForum() {
         return forum;
     }
 
-    public Object getUser() {
+    public String getUser() {
         return user;
     }
 
@@ -75,18 +62,6 @@ public class PostFull {
 
     public boolean isApproved() {
         return isApproved;
-    }
-
-    public void setThread(Object thread) {
-        this.thread = thread;
-    }
-
-    public void setForum(Object forum) {
-        this.forum = forum;
-    }
-
-    public void setUser(Object user) {
-        this.user = user;
     }
 
     public boolean isHighlighted() {
