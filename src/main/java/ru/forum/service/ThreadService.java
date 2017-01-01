@@ -1,5 +1,6 @@
 package ru.forum.service;
 
+import org.springframework.scheduling.config.SchedulerBeanDefinitionParser;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
@@ -143,6 +144,17 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-
+    //TODO: check if already subscribe (through DB schema or through query)
+    public boolean subscribeThread(String userId, long threadId) throws DbException {
+        formatter.format("INSERT INTO Subscription(thread, user) VALUES(%d, '%s');", threadId, userId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return false;
+            }
+            return true;
+        } catch (SQLException e) {
+            throw new DbException("Unable to subscribe user!", e);
+        }
+    }
 
 }
