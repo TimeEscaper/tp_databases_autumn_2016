@@ -197,8 +197,39 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    /*public ThreadDataSet voteThread(long threadId, short vote) {
-        formatter;
-    }*/
+    public ThreadDataSet voteThread(long threadId, short vote) throws DbException {
+        if (vote == 1) {
+            formatter.format("UPDATE Thread SET vote = vote + 1 WHERE id = %d;", threadId);
+        }
+        else if (vote == -1) {
+            formatter.format("UPDATE Thread SET vote = vote - 1 WHERE id = %d;", threadId);
+        }
+        else
+            return null;
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DbException("Unable to update vote for thread!", e);
+        }
+        formatter.format("SELECT * FROM Thread WHERE id = %d;", threadId);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getString("forum"),
+                    resultSet.getString("user"),
+                    resultSet.getString("date"),
+                    resultSet.getString("title"),
+                    resultSet.getString("slug"),
+                    resultSet.getString("message"),
+                    resultSet.getBoolean("isClosed"),
+                    resultSet.getBoolean("isDeleted")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get thread after vote update!", e);
+        }
+
+    }
 
 }
