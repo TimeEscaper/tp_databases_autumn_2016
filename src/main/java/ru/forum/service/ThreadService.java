@@ -158,8 +158,16 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    /*public boolean unsubscribeThread(String userId, long threadId) {
-        formatter.format("DELETE From ")
-    }*/
+    public SubscriptionDataSet unsubscribeThread(String userId, long threadId) throws DbException {
+        formatter.format("DELETE From Subscription WHERE user = '%s' AND thread = %d;", userId, threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return null;
+            }
+            return new SubscriptionDataSet(threadId, userId);
+        } catch (SQLException e) {
+            throw new DbException("Unable to unsubscribe user!", e);
+        }
+    }
 
 }
