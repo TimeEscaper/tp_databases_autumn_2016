@@ -117,7 +117,7 @@ public class UserService extends AbstractDbService {
 
     public UserFull getUserDetails(String email) throws DbException {
 
-        final Connection connection = getConnection();
+        /*final Connection connection = getConnection();
         final StringBuilder sqlUpdate = new StringBuilder();
         try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
             final List<String> followers = getAllFollowers(email);
@@ -137,6 +137,29 @@ public class UserService extends AbstractDbService {
             } catch (SQLException e) {
                 throw new DbException("Unable to get user details!", e);
             }
+        } */
+        formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
+                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
+                "FROM User " +
+                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
+                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " +
+                "WHERE User.email='%s' GROUP BY  User.id;", email);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new UserFull(
+                    resultSet.getLong("id"),
+                    resultSet.getString("email"),
+                    resultSet.getString("username"),
+                    resultSet.getString("about"),
+                    resultSet.getString("name"),
+                    resultSet.getBoolean("isAnonymous"),
+                    (String[])resultSet.getArray("followers").getArray(),
+                    (String[])resultSet.getArray("followees").getArray(),
+                    (long[])resultSet.getArray("subscriptions").getArray()
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get user details!", e);
         }
     }
 

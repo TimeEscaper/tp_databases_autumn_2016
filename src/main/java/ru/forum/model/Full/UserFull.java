@@ -12,12 +12,12 @@ public class UserFull {
     private String about;
     private String name;
     private boolean isAnonymous;
-    private List<String> followers = new ArrayList<>();
-    private List<String> following = new ArrayList<>();
-    private List<Long> subscriptions = new ArrayList<>();
+    private String[] followers;
+    private String[] following;
+    private long[] subscriptions;
 
     public UserFull(long id, String email, String username, String about, String name, boolean isAnonymous,
-                    List<String> followers, List<String> following, List<Long> subscriptions) {
+                    String[] followers, String[] following, long[] subscriptions) {
         this.id = id;
         this.email = email;
         this.username = username;
@@ -53,15 +53,15 @@ public class UserFull {
         return isAnonymous;
     }
 
-    public List<String> getFollowers() {
+    public String[] getFollowers() {
         return followers;
     }
 
-    public List<String> getFollowing() {
+    public String[] getFollowing() {
         return following;
     }
 
-    public List<Long> getSubscriptions() {
+    public long[] getSubscriptions() {
         return subscriptions;
     }
 }
