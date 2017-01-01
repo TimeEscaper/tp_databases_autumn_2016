@@ -47,13 +47,13 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    public long closeThread(long threadId) throws DbException {
+    public boolean closeThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return -1;
+                return false;
             };
-            return threadId;
+            return true;
         } catch (SQLException e) {
             throw new DbException("Unable to close thread!", e);
         }
@@ -107,40 +107,42 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    public long openThread(long threadId) throws DbException {
+    public boolean openThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return -1;
+                return false;
             };
-            return threadId;
+            return true;
         } catch (SQLException e) {
             throw new DbException("Unable to open thread!", e);
         }
     }
 
-    public long removeThread(long threadId) throws DbException {
+    public boolean removeThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return -1;
+                return false;
             };
-            return threadId;
+            return true;
         } catch (SQLException e) {
             throw new DbException("Unable to remove thread!", e);
         }
     }
 
-    public long restoreThread(long threadId) throws DbException {
+    public boolean restoreThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return -1;
+                return false;
             };
-            return threadId;
+            return true;
         } catch (SQLException e) {
             throw new DbException("Unable to restore thread!", e);
         }
     }
+
+
 
 }
