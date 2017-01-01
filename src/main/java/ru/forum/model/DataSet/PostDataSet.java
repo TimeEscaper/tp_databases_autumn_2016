@@ -1,6 +1,9 @@
 package ru.forum.model.DataSet;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @SuppressWarnings("unused")
+@JsonIgnoreProperties({"vote"})
 public class PostDataSet {
 
     private long id;
@@ -15,6 +18,7 @@ public class PostDataSet {
     private boolean isEdited;
     private boolean isSpam;
     private boolean isDeleted;
+    private long vote = 0;
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
@@ -30,6 +34,24 @@ public class PostDataSet {
         this.isEdited = isEdited;
         this.isSpam = isSpam;
         this.isDeleted = isDeleted;
+    }
+
+    public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
+                       boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
+                       long vote) {
+        this.id = id;
+        this.thread = thread;
+        this.forum = forum;
+        this.user = user;
+        this.message = message;
+        this.date = date;
+        this.parent = parent;
+        this.isApproved = isApproved;
+        this.isHighlighted = isHighlighted;
+        this.isEdited = isEdited;
+        this.isSpam = isSpam;
+        this.isDeleted = isDeleted;
+        this.vote = vote;
     }
 
     public long getId() {
@@ -79,4 +101,6 @@ public class PostDataSet {
     public boolean isDeleted() {
         return isDeleted;
     }
+
+    public long getVote() { return vote; }
 }

@@ -197,4 +197,8 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
+    /*public ThreadDataSet voteThread(long threadId, short vote) {
+        formatter;
+    }*/
+
 }

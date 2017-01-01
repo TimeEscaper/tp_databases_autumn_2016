@@ -1,7 +1,10 @@
 package ru.forum.model.DataSet;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @SuppressWarnings("unused")
+@JsonIgnoreProperties({"vote"})
 public class ThreadDataSet {
 
     long id;
@@ -13,6 +16,7 @@ public class ThreadDataSet {
     private String message;
     private boolean isClosed;
     private boolean isDeleted;
+    private long vote = 0;
 
     public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
                          boolean isClosed, boolean isDeleted) {
@@ -37,6 +41,20 @@ public class ThreadDataSet {
         this.slug = slug;
         this.message = message;
         this.isClosed = isClosed;
+    }
+
+    public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
+                         boolean isClosed, boolean isDeleted, long vote) {
+        this.id = id;
+        this.forum = forum;
+        this.user = user;
+        this.date = date;
+        this.title = title;
+        this.slug = slug;
+        this.message = message;
+        this.isClosed = isClosed;
+        this.isDeleted = isDeleted;
+        this.vote = vote;
     }
 
     public long getId() {
@@ -74,4 +92,6 @@ public class ThreadDataSet {
     public boolean isDeleted() {
         return isDeleted;
     }
+
+    public long getVote() { return vote; }
 }
