@@ -170,4 +170,31 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
+    public ThreadDataSet updateThread(long threadId, String slug, String message) throws DbException {
+        formatter.format("UPDATE Thread(slug,message) SET('%s','%s') WHERE id = %d;", slug, message, threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DbException("Unable to update thread!", e);
+        }
+        formatter.format("SELECT * FROM Thread WHERE id = %d;", threadId);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getString("forum"),
+                    resultSet.getString("user"),
+                    resultSet.getString("date"),
+                    resultSet.getString("title"),
+                    resultSet.getString("slug"),
+                    resultSet.getString("message"),
+                    resultSet.getBoolean("isClosed"),
+                    resultSet.getBoolean("isDeleted")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get thread after update!", e);
+        }
+    }
+
 }
