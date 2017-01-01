@@ -119,4 +119,16 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
+    public long removeThread(long threadId) throws DbException {
+        formatter.format("UPDATE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return -1;
+            };
+            return threadId;
+        } catch (SQLException e) {
+            throw new DbException("Unable to remove thread!", e);
+        }
+    }
+
 }
