@@ -3,48 +3,42 @@ package ru.forum.service;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.database.executor.Executor;
 import ru.forum.model.DataSet.ForumDataSet;
 import ru.forum.model.DataSet.ThreadDataSet;
 import ru.forum.model.DataSet.UserDataSet;
 import ru.forum.model.Full.PostFull;
 import ru.forum.model.Full.ThreadFull;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.Locale;
 
+@SuppressWarnings({"unused", "OverlyComplexMethod"})
 @Service
 public class ForumService extends AbstractDbService {
 
-    public ForumService() throws DbException { }
+    public ForumService() throws DbException {
+    }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
-        final Connection connection = getConnection();
-        final StringBuilder sqlUpdate = new StringBuilder();
-        try (Formatter formatter = new Formatter(sqlUpdate, Locale.US)) {
-            formatter.format("INSERT INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
-                    name, shortName, user);
-            final Executor executor = new Executor();
+        formatter.format("INSERT INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
+                name, shortName, user);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+                return null;
+        } catch (SQLException e) {
+            throw new DbException("Unable to create forum!", e);
+        }
 
-            try {
-                final int updated = executor.execUpdate(connection, formatter.toString());
-                if (updated == 0)
-                    return null;
-
-                formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
-                return executor.execQuery(connection, formatter.toString(), resultSet -> new ForumDataSet(
-                        resultSet.getLong("id"),
-                        resultSet.getString("name"),
-                        resultSet.getString("short_name"),
-                        resultSet.getString("user")
-                ));
-
-            } catch (SQLException e) {
-                throw new DbException("Unable to create forum!", e);
-            }
+        formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ForumDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getString("name"),
+                    resultSet.getString("short_name"),
+                    resultSet.getString("user")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get forum after create!", e);
         }
     }
 
@@ -64,10 +58,11 @@ public class ForumService extends AbstractDbService {
     }
 
     //TODO: check field names and cast
+    @SuppressWarnings("SwitchStatementWithoutDefaultBranch")
     public ArrayList<PostFull> listPosts(String forum,
                                          String since, Integer limit, String order, ArrayList<String> related)
             throws DbException {
-        String postfix = " WHERE Post.forum = '" + forum + "'";
+        String postfix = " WHERE Post.forum = '" + forum + '\'';
         if (since != null) {
             postfix += " AND Post.date >= " + since;
         }
@@ -79,24 +74,27 @@ public class ForumService extends AbstractDbService {
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        String tables = "SELECT Post.*";
-        String joins = "FROM Post";
+        final StringBuilder tables = new StringBuilder("SELECT Post.*");
+        final StringBuilder joins = new StringBuilder("FROM Post");
+
         for (String table : related) {
-            if (table.equals("forum")) {
-                tables += " , forum.*";
-                joins += " JOIN Forum ON(Post.forum = Forum.short_name)";
-            }
-            else if (table.equals("thread")) {
-                tables += " , Thread.*";
-                joins += " JOIN Thread ON(Post.thread = Thread.id)";
-            }
-            else if (table.equals("user")) {
-                tables += " , User.*";
-                joins += " JOIN User ON(Post.user = User.email)";
+            switch (table) {
+                case "forum":
+                    tables.append(" , forum.*");
+                    joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
+                    break;
+                case "thread":
+                    tables.append(" , Thread.*");
+                    joins.append(" JOIN Thread ON(Post.thread = Thread.id)");
+                    break;
+                case "user":
+                    tables.append(" , User.*");
+                    joins.append(" JOIN User ON(Post.user = User.email)");
+                    break;
             }
         }
 
-        final String query = tables + joins + postfix;
+        final String query = tables.toString() + joins + postfix;
 
         try {
             return executor.execQuery(getConnection(), query,
@@ -125,8 +123,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous")
                                 ));
-                            }
-                            else {
+                            } else {
                                 post.setUser(resultSet.getString("Post.user"));
                             }
                             if (related.contains("forum")) {
@@ -136,8 +133,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("Forum.shortName"),
                                         resultSet.getString("Forum.user")
                                 ));
-                            }
-                            else {
+                            } else {
                                 post.setForum(resultSet.getString("Post.forum"));
                             }
                             if (related.contains("thread")) {
@@ -152,8 +148,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getBoolean("Thread.isClosed"),
                                         resultSet.getBoolean("Thread.isDeleted")
                                 ));
-                            }
-                            else {
+                            } else {
                                 post.setThread(resultSet.getString("Post.thread"));
                             }
 
@@ -169,9 +164,9 @@ public class ForumService extends AbstractDbService {
 
     public ArrayList<ThreadFull> listThreads(String forum,
                                              String since, Integer limit, String order, ArrayList<String> related)
-        throws DbException {
+            throws DbException {
 
-        String postfix = " WHERE Thread.forum = '" + forum + "'";
+        String postfix = " WHERE Thread.forum = '" + forum + '\'';
         if (since != null) {
             postfix += " AND Thread.date >= " + since;
         }
@@ -183,21 +178,21 @@ public class ForumService extends AbstractDbService {
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        String tables = "SELECT Thread.*";
-        String joins = "FROM Thread";
+
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*");
+        final StringBuilder joins = new StringBuilder("FROM Thread");
+
         for (String table : related) {
             if (table.equals("forum")) {
-                tables += " , forum.*";
-                joins += " JOIN Forum ON(Thread.forum = Forum.short_name)";
-            }
-
-            else if (table.equals("user")) {
-                tables += " , User.*";
-                joins += " JOIN User ON(Thread.user = User.email)";
+                tables.append(" , forum.*");
+                joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
+            } else if (table.equals("user")) {
+                tables.append(" , User.*");
+                joins.append(" JOIN User ON(Thread.user = User.email)");
             }
         }
 
-        final String query = tables + joins + postfix;
+        final String query = tables.toString() + joins + postfix;
 
         try {
             return executor.execQuery(getConnection(), query,
@@ -223,8 +218,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous")
                                 ));
-                            }
-                            else {
+                            } else {
                                 thread.setUser(resultSet.getString("Post.user"));
                             }
                             if (related.contains("forum")) {
@@ -234,8 +228,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("Forum.shortName"),
                                         resultSet.getString("Forum.user")
                                 ));
-                            }
-                            else {
+                            } else {
                                 thread.setForum(resultSet.getString("Post.forum"));
                             }
 
@@ -248,7 +241,6 @@ public class ForumService extends AbstractDbService {
             throw new DbException("Unable to get threads or related data!", e);
         }
     }
-
 
 
 }
