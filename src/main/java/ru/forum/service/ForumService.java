@@ -5,7 +5,6 @@ import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.DataSet.ForumDataSet;
 import ru.forum.model.DataSet.ThreadDataSet;
-import ru.forum.model.DataSet.UserDataSet;
 import ru.forum.model.Full.PostFull;
 import ru.forum.model.Full.ThreadFull;
 import ru.forum.model.Full.UserFull;
@@ -91,10 +90,10 @@ public class ForumService extends AbstractDbService {
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id)");
                     break;
                 case "user":
-                    tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers," +
+                    tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                             "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                             "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-                    joins.append(" JOIN User ON(Post.user = User.email)" +
+                    joins.append(" JOIN User ON(Post.user = User.email) " +
                             "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
                             "AND User.email = UserFollowers.followee) " +
                             "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
@@ -183,6 +182,8 @@ public class ForumService extends AbstractDbService {
         if (since != null) {
             postfix += " AND Thread.date >= " + since;
         }
+        if (related.contains("user"))
+            postfix += " GROUP BY User.id ";
         if (order == null)
             postfix += " ORDER BY Thread.date desc";
         else
@@ -200,8 +201,15 @@ public class ForumService extends AbstractDbService {
                 tables.append(" , forum.*");
                 joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
             } else if (table.equals("user")) {
-                tables.append(" , User.*");
-                joins.append(" JOIN User ON(Thread.user = User.email)");
+                tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                        "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
+                        "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
+                joins.append(" JOIN User ON(Thread.user = User.email) " +
+                        "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
+                        "AND User.email = UserFollowers.followee) " +
+                        "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
+                        "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                        "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
             }
         }
 
@@ -223,13 +231,16 @@ public class ForumService extends AbstractDbService {
                             );
 
                             if (related.contains("user")) {
-                                thread.setUser(new UserDataSet(
+                                thread.setUser(new UserFull(
                                         resultSet.getLong("User.id"),
                                         resultSet.getString("User.email"),
                                         resultSet.getString("User.username"),
                                         resultSet.getString("User.about"),
                                         resultSet.getString("User.name"),
-                                        resultSet.getBoolean("User.isAnonymous")
+                                        resultSet.getBoolean("User.isAnonymous"),
+                                        (String[]) resultSet.getArray("followers").getArray(),
+                                        (String[]) resultSet.getArray("followees").getArray(),
+                                        (long[]) resultSet.getArray("subscriptions").getArray()
                                 ));
                             } else {
                                 thread.setUser(resultSet.getString("Post.user"));
