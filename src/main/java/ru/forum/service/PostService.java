@@ -157,5 +157,93 @@ public class PostService extends AbstractDbService {
         }
     }
 
+    public ArrayList<PostFull> listPostsByForum(String forum,
+                                         String since, Integer limit, String order)
+            throws DbException {
+        String query = "SELECT * FROM Post WHERE forum = '" + forum + '\'';
+        if (since != null) {
+            query += " AND date >= " + since;
+        }
+        if (order == null)
+            query += " ORDER BY date desc";
+        else
+            query += "ORDER BY date " + order;
+        if (limit != null)
+            query += " LIMIT " + limit.toString();
+        query += ";";
 
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ArrayList<PostFull> result = new ArrayList<>();
+                        while (resultSet.next()) {
+                            final PostFull post = new PostFull(
+                                    resultSet.getLong("id"),
+                                    resultSet.getString("thread"),
+                                    resultSet.getString("forum"),
+                                    resultSet.getString("user"),
+                                    resultSet.getString("message"),
+                                    resultSet.getString("date"),
+                                    resultSet.getLong("parent"),
+                                    resultSet.getBoolean("isApproved"),
+                                    resultSet.getBoolean("isHighlighted"),
+                                    resultSet.getBoolean("isEdited"),
+                                    resultSet.getBoolean("isSpam"),
+                                    resultSet.getBoolean("isDeleted")
+
+                            );
+                            result.add(post);
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get posts or related data!", e);
+        }
+    }
+
+    public ArrayList<PostFull> listPostsByThread(int thread,
+                                                String since, Integer limit, String order, ArrayList<String> related)
+            throws DbException {
+        String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
+        if (since != null) {
+            query += " AND date >= " + since;
+        }
+        if (order == null)
+            query += " ORDER BY date desc";
+        else
+            query += "ORDER BY date " + order;
+        if (limit != null)
+            query += " LIMIT " + limit.toString();
+        query += ";";
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ArrayList<PostFull> result = new ArrayList<>();
+                        while (resultSet.next()) {
+                            final PostFull post = new PostFull(
+                                    resultSet.getLong("id"),
+                                    resultSet.getString("thread"),
+                                    resultSet.getString("forum"),
+                                    resultSet.getString("user"),
+                                    resultSet.getString("message"),
+                                    resultSet.getString("date"),
+                                    resultSet.getLong("parent"),
+                                    resultSet.getBoolean("isApproved"),
+                                    resultSet.getBoolean("isHighlighted"),
+                                    resultSet.getBoolean("isEdited"),
+                                    resultSet.getBoolean("isSpam"),
+                                    resultSet.getBoolean("isDeleted")
+
+                            );
+                            result.add(post);
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get posts or related data!", e);
+        }
+    }
 }

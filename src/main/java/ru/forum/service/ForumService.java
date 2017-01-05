@@ -12,7 +12,7 @@ import ru.forum.model.Full.UserFull;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-@SuppressWarnings({"unused", "OverlyComplexMethod"})
+@SuppressWarnings({"unused", "OverlyComplexMethod", "Duplicates"})
 @Service
 public class ForumService extends AbstractDbService {
 
