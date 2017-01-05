@@ -59,7 +59,10 @@ public class PostService extends AbstractDbService {
 
     public PostFull postDetails(int postId, List<String> related) throws DbException {
 
-        final String postfix = " WHERE Post.id = " + Integer.toString(postId) + ';';
+        String postfix = " WHERE Post.id = " + Integer.toString(postId);
+        if (related.contains("user"))
+            postfix += " GROUP BY User.id";
+        postfix += ';';
 
         final StringBuilder tables = new StringBuilder("SELECT Post.*");
         final StringBuilder joins = new StringBuilder("FROM Post");
@@ -152,7 +155,7 @@ public class PostService extends AbstractDbService {
 
                     });
         } catch (SQLException e) {
-            throw new DbException("Unable to get posts or related data!", e);
+            throw new DbException("Unable to get post or related data!", e);
         }
     }
 

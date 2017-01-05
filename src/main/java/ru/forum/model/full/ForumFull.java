@@ -17,6 +17,12 @@ public class ForumFull {
         this.user = user;
     }
 
+    public ForumFull(long id, String name, String shortName) {
+        this.id = id;
+        this.name = name;
+        this.shortName = shortName;
+    }
+
     public long getId() {
         return id;
     }
@@ -32,5 +38,9 @@ public class ForumFull {
 
     public Object getUser() {
         return user;
+    }
+
+    public void setUser(Object user) {
+        this.user = user;
     }
 }

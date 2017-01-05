@@ -5,6 +5,7 @@ import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.ForumFull;
 import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.full.UserFull;
@@ -55,6 +56,62 @@ public class ForumService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to get forum dataset!", e);
         }
+    }
+
+    public ForumFull forumDetails(String forum, String user) throws DbException {
+
+        String postfix = " WHERE Forum.short_name = " + forum;
+        if (user != null)
+            postfix += " GROUP BY User.id";
+        postfix += ';';
+
+        final StringBuilder tables = new StringBuilder("SELECT Forum.*");
+        final StringBuilder joins = new StringBuilder("FROM Forum");
+
+        if (user != null) {
+            tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                    "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
+                    "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
+            joins.append(" JOIN User ON(Post.user = User.email) " +
+                    "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
+                    "AND User.email = UserFollowers.followee) " +
+                    "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
+                    "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                    "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+        }
+
+        final String query = tables.toString() + joins + postfix;
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ForumFull result = new ForumFull(
+                                resultSet.getLong("Forum.id"),
+                                resultSet.getString("Forum.name"),
+                                resultSet.getString("Forum.short_name")
+                        );
+
+                        if (user != null) {
+                            result.setUser(new UserFull(
+                                    resultSet.getLong("User.id"),
+                                    resultSet.getString("User.email"),
+                                    resultSet.getString("User.username"),
+                                    resultSet.getString("User.about"),
+                                    resultSet.getString("User.name"),
+                                    resultSet.getBoolean("User.isAnonymous"),
+                                    (String[]) resultSet.getArray("followers").getArray(),
+                                    (String[]) resultSet.getArray("followees").getArray(),
+                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                            ));
+                        } else {
+                            result.setUser(resultSet.getString("Forum.user"));
+                        }
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get forum or related data!", e);
+        }
+
     }
 
     //TODO: check field names and cast
