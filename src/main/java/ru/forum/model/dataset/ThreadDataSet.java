@@ -1,4 +1,4 @@
-package ru.forum.model.DataSet;
+package ru.forum.model.dataset;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

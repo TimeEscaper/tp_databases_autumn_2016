@@ -3,11 +3,11 @@ package ru.forum.service;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.model.DataSet.ForumDataSet;
-import ru.forum.model.DataSet.ThreadDataSet;
-import ru.forum.model.Full.PostFull;
-import ru.forum.model.Full.ThreadFull;
-import ru.forum.model.Full.UserFull;
+import ru.forum.model.dataset.ForumDataSet;
+import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.PostFull;
+import ru.forum.model.full.ThreadFull;
+import ru.forum.model.full.UserFull;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -119,7 +119,8 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getBoolean("Post.isHighlighted"),
                                     resultSet.getBoolean("Post.isEdited"),
                                     resultSet.getBoolean("Post.isSpam"),
-                                    resultSet.getBoolean("Post.isDeleted")
+                                    resultSet.getBoolean("Post.isDeleted"),
+                                    resultSet.getLong("likes")
 
                             );
 

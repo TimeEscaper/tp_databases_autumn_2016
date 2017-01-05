@@ -1,7 +1,4 @@
-package ru.forum.model.Full;
-
-import java.util.ArrayList;
-import java.util.List;
+package ru.forum.model.full;
 
 @SuppressWarnings("unused")
 public class UserFull {

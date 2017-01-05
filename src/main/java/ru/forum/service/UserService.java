@@ -3,8 +3,8 @@ package ru.forum.service;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.model.DataSet.UserDataSet;
-import ru.forum.model.Full.UserFull;
+import ru.forum.model.dataset.UserDataSet;
+import ru.forum.model.full.UserFull;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

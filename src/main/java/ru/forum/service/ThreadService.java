@@ -1,16 +1,15 @@
 package ru.forum.service;
 
-import org.springframework.scheduling.config.SchedulerBeanDefinitionParser;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.model.DataSet.SubscriptionDataSet;
-import ru.forum.model.DataSet.ThreadDataSet;
+import ru.forum.model.dataset.SubscriptionDataSet;
+import ru.forum.model.dataset.ThreadDataSet;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-@SuppressWarnings("Duplicates")
+@SuppressWarnings({"Duplicates", "unused"})
 @Service
 public class ThreadService extends AbstractDbService {
 
@@ -53,10 +52,7 @@ public class ThreadService extends AbstractDbService {
     public boolean closeThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            };
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to close thread!", e);
         }
@@ -68,9 +64,9 @@ public class ThreadService extends AbstractDbService {
 
         String postfix;
         if (isByUser)
-            postfix = " WHERE Thread.user = '" + filter + "'";
+            postfix = " WHERE Thread.user = '" + filter + '\'';
         else
-            postfix = " WHERE Thread.forum = '" + filter + "'";
+            postfix = " WHERE Thread.forum = '" + filter + '\'';
 
         if (since != null) {
             postfix += " AND Thread.date >= " + since;
@@ -83,13 +79,13 @@ public class ThreadService extends AbstractDbService {
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        String query = "SELECT * FROM Thread" + postfix;
+        final String query = "SELECT * FROM Thread" + postfix;
 
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
-                ArrayList<ThreadDataSet> result = new ArrayList<>();
+                final ArrayList<ThreadDataSet> result = new ArrayList<>();
                 while (resultSet.next()) {
-                    ThreadDataSet thread = new ThreadDataSet(
+                    final ThreadDataSet thread = new ThreadDataSet(
                             resultSet.getLong("id"),
                             resultSet.getString("forum"),
                             resultSet.getString("user"),
@@ -113,10 +109,7 @@ public class ThreadService extends AbstractDbService {
     public boolean openThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            };
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to open thread!", e);
         }
@@ -125,10 +118,7 @@ public class ThreadService extends AbstractDbService {
     public boolean removeThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            };
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to remove thread!", e);
         }
@@ -137,10 +127,7 @@ public class ThreadService extends AbstractDbService {
     public boolean restoreThread(long threadId) throws DbException {
         formatter.format("UPDATE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            };
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to restore thread!", e);
         }

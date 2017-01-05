@@ -1,36 +1,33 @@
 package ru.forum.service;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.model.DataSet.ForumDataSet;
-import ru.forum.model.DataSet.PostDataSet;
-import ru.forum.model.DataSet.ThreadDataSet;
-import ru.forum.model.Full.PostFull;
-import ru.forum.model.Full.UserFull;
-import sun.util.locale.StringTokenIterator;
+import ru.forum.model.dataset.ForumDataSet;
+import ru.forum.model.dataset.PostDataSet;
+import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.PostFull;
+import ru.forum.model.full.UserFull;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("Duplicates")
+@SuppressWarnings({"Duplicates", "unused", "SwitchStatementWithoutDefaultBranch"})
 @Service
 public class PostService extends AbstractDbService {
 
-    public PostService() throws DbException { }
+    public PostService() throws DbException {
+    }
 
     public PostDataSet createPost(String date, int thread, String message, String user, String forum, int parent,
                                   boolean isApproved, boolean isHighlighted, boolean isEdited,
-                                  boolean isSpam, boolean isDeleted) throws DbException
-    {
+                                  boolean isSpam, boolean isDeleted) throws DbException {
         formatter.format("INSERT INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited,+" +
-                "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d.%d.%d.%d);",
-                thread, forum, user, message, date, parent, isApproved ? 1:0, isHighlighted ? 1:0, isEdited ? 1:0,
-                isSpam ? 1:0, isDeleted ? 1:0);
+                        "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d.%d.%d.%d);",
+                thread, forum, user, message, date, parent, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
+                isSpam ? 1 : 0, isDeleted ? 1 : 0);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;
@@ -52,7 +49,8 @@ public class PostService extends AbstractDbService {
                     resultSet.getBoolean("isHighlighted"),
                     resultSet.getBoolean("isEdited"),
                     resultSet.getBoolean("isSpam"),
-                    resultSet.getBoolean("isDeleted")
+                    resultSet.getBoolean("isDeleted"),
+                    resultSet.getLong("likes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get post after create!", e);
@@ -95,61 +93,62 @@ public class PostService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                            final PostFull post = new PostFull(
-                                    resultSet.getLong("Post.id"),
-                                    resultSet.getString("Post.message"),
-                                    resultSet.getString("Post.date"),
-                                    resultSet.getLong("Post.parent"),
-                                    resultSet.getBoolean("Post.isApproved"),
-                                    resultSet.getBoolean("Post.isHighlighted"),
-                                    resultSet.getBoolean("Post.isEdited"),
-                                    resultSet.getBoolean("Post.isSpam"),
-                                    resultSet.getBoolean("Post.isDeleted")
+                        final PostFull post = new PostFull(
+                                resultSet.getLong("Post.id"),
+                                resultSet.getString("Post.message"),
+                                resultSet.getString("Post.date"),
+                                resultSet.getLong("Post.parent"),
+                                resultSet.getBoolean("Post.isApproved"),
+                                resultSet.getBoolean("Post.isHighlighted"),
+                                resultSet.getBoolean("Post.isEdited"),
+                                resultSet.getBoolean("Post.isSpam"),
+                                resultSet.getBoolean("Post.isDeleted"),
+                                resultSet.getLong("likes")
 
-                            );
+                        );
 
-                            if (related.contains("user")) {
-                                post.setUser(new UserFull(
-                                        resultSet.getLong("User.id"),
-                                        resultSet.getString("User.email"),
-                                        resultSet.getString("User.username"),
-                                        resultSet.getString("User.about"),
-                                        resultSet.getString("User.name"),
-                                        resultSet.getBoolean("User.isAnonymous"),
-                                        (String[]) resultSet.getArray("followers").getArray(),
-                                        (String[]) resultSet.getArray("followees").getArray(),
-                                        (long[]) resultSet.getArray("subscriptions").getArray()
-                                ));
-                            } else {
-                                post.setUser(resultSet.getString("Post.user"));
-                            }
-                            if (related.contains("forum")) {
-                                post.setForum(new ForumDataSet(
-                                        resultSet.getLong("Forum.id"),
-                                        resultSet.getString("Forum.name"),
-                                        resultSet.getString("Forum.shortName"),
-                                        resultSet.getString("Forum.user")
-                                ));
-                            } else {
-                                post.setForum(resultSet.getString("Post.forum"));
-                            }
-                            if (related.contains("thread")) {
-                                post.setThread(new ThreadDataSet(
-                                        resultSet.getLong("Thread.id"),
-                                        resultSet.getString("Thread.forum"),
-                                        resultSet.getString("Thread.user"),
-                                        resultSet.getString("Thread.date"),
-                                        resultSet.getString("Thread.title"),
-                                        resultSet.getString("Thread.slug"),
-                                        resultSet.getString("Thread.message"),
-                                        resultSet.getBoolean("Thread.isClosed"),
-                                        resultSet.getBoolean("Thread.isDeleted")
-                                ));
-                            } else {
-                                post.setThread(resultSet.getString("Post.thread"));
-                            }
+                        if (related.contains("user")) {
+                            post.setUser(new UserFull(
+                                    resultSet.getLong("User.id"),
+                                    resultSet.getString("User.email"),
+                                    resultSet.getString("User.username"),
+                                    resultSet.getString("User.about"),
+                                    resultSet.getString("User.name"),
+                                    resultSet.getBoolean("User.isAnonymous"),
+                                    (String[]) resultSet.getArray("followers").getArray(),
+                                    (String[]) resultSet.getArray("followees").getArray(),
+                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                            ));
+                        } else {
+                            post.setUser(resultSet.getString("Post.user"));
+                        }
+                        if (related.contains("forum")) {
+                            post.setForum(new ForumDataSet(
+                                    resultSet.getLong("Forum.id"),
+                                    resultSet.getString("Forum.name"),
+                                    resultSet.getString("Forum.shortName"),
+                                    resultSet.getString("Forum.user")
+                            ));
+                        } else {
+                            post.setForum(resultSet.getString("Post.forum"));
+                        }
+                        if (related.contains("thread")) {
+                            post.setThread(new ThreadDataSet(
+                                    resultSet.getLong("Thread.id"),
+                                    resultSet.getString("Thread.forum"),
+                                    resultSet.getString("Thread.user"),
+                                    resultSet.getString("Thread.date"),
+                                    resultSet.getString("Thread.title"),
+                                    resultSet.getString("Thread.slug"),
+                                    resultSet.getString("Thread.message"),
+                                    resultSet.getBoolean("Thread.isClosed"),
+                                    resultSet.getBoolean("Thread.isDeleted")
+                            ));
+                        } else {
+                            post.setThread(resultSet.getString("Post.thread"));
+                        }
 
-                            return post;
+                        return post;
 
                     });
         } catch (SQLException e) {
@@ -158,7 +157,7 @@ public class PostService extends AbstractDbService {
     }
 
     public ArrayList<PostFull> listPostsByForum(String forum,
-                                         String since, Integer limit, String order)
+                                                String since, Integer limit, String order)
             throws DbException {
         String query = "SELECT * FROM Post WHERE forum = '" + forum + '\'';
         if (since != null) {
@@ -189,7 +188,8 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("isHighlighted"),
                                     resultSet.getBoolean("isEdited"),
                                     resultSet.getBoolean("isSpam"),
-                                    resultSet.getBoolean("isDeleted")
+                                    resultSet.getBoolean("isDeleted"),
+                                    resultSet.getLong("likes")
 
                             );
                             result.add(post);
@@ -203,7 +203,7 @@ public class PostService extends AbstractDbService {
     }
 
     public ArrayList<PostFull> listPostsByThread(int thread,
-                                                String since, Integer limit, String order, ArrayList<String> related)
+                                                 String since, Integer limit, String order, ArrayList<String> related)
             throws DbException {
         String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
         if (since != null) {
@@ -234,7 +234,8 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("isHighlighted"),
                                     resultSet.getBoolean("isEdited"),
                                     resultSet.getBoolean("isSpam"),
-                                    resultSet.getBoolean("isDeleted")
+                                    resultSet.getBoolean("isDeleted"),
+                                    resultSet.getLong("likes")
 
                             );
                             result.add(post);
@@ -250,10 +251,7 @@ public class PostService extends AbstractDbService {
     public boolean removePost(long postId) throws DbException {
         formatter.format("UPDATE Post (isDeleted) SET (1) WHERE id = %d;", postId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            };
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to remove thread!", e);
         }
@@ -262,11 +260,7 @@ public class PostService extends AbstractDbService {
     public boolean restorePost(long postId) throws DbException {
         formatter.format("UPDATE Post (isDeleted) SET (0) WHERE id = %d;", postId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
-                return false;
-            }
-            ;
-            return true;
+            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to restore thread!", e);
         }
@@ -295,7 +289,8 @@ public class PostService extends AbstractDbService {
                     resultSet.getBoolean("isHighlighted"),
                     resultSet.getBoolean("isEdited"),
                     resultSet.getBoolean("isSpam"),
-                    resultSet.getBoolean("isDeleted")
+                    resultSet.getBoolean("isDeleted"),
+                    resultSet.getLong("likes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get post after update!", e);
@@ -305,11 +300,9 @@ public class PostService extends AbstractDbService {
     public PostDataSet votePost(long postId, short vote) throws DbException {
         if (vote == 1) {
             formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);
-        }
-        else if (vote == -1) {
+        } else if (vote == -1) {
             formatter.format("UPDATE Thread SET likes = likes - 1 WHERE id = %d;", postId);
-        }
-        else
+        } else
             return null;
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
