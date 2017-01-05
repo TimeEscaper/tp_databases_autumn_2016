@@ -3,7 +3,6 @@ package ru.forum.model.DataSet;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @SuppressWarnings("unused")
-@JsonIgnoreProperties({"vote"})
 public class PostDataSet {
 
     private long id;
@@ -18,7 +17,7 @@ public class PostDataSet {
     private boolean isEdited;
     private boolean isSpam;
     private boolean isDeleted;
-    private long vote = 0;
+    private long likes = 0;
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
@@ -38,7 +37,7 @@ public class PostDataSet {
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
-                       long vote) {
+                       long likes) {
         this.id = id;
         this.thread = thread;
         this.forum = forum;
@@ -51,7 +50,7 @@ public class PostDataSet {
         this.isEdited = isEdited;
         this.isSpam = isSpam;
         this.isDeleted = isDeleted;
-        this.vote = vote;
+        this.likes = likes;
     }
 
     public long getId() {
@@ -102,5 +101,5 @@ public class PostDataSet {
         return isDeleted;
     }
 
-    public long getVote() { return vote; }
+    public long getLikes() { return likes; }
 }

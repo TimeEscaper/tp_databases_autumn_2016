@@ -246,4 +246,98 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to get posts or related data!", e);
         }
     }
+
+    public boolean removePost(long postId) throws DbException {
+        formatter.format("UPDATE Post (isDeleted) SET (1) WHERE id = %d;", postId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return false;
+            };
+            return true;
+        } catch (SQLException e) {
+            throw new DbException("Unable to remove thread!", e);
+        }
+    }
+
+    public boolean restorePost(long postId) throws DbException {
+        formatter.format("UPDATE Post (isDeleted) SET (0) WHERE id = %d;", postId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return false;
+            }
+            ;
+            return true;
+        } catch (SQLException e) {
+            throw new DbException("Unable to restore thread!", e);
+        }
+    }
+
+    public PostDataSet updatePost(long postId, String message) throws DbException {
+        formatter.format("UPDATE Post(message) SET('%s') WHERE id=%d;", message, postId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+                return null;
+        } catch (SQLException e) {
+            throw new DbException("Unable to update post!", e);
+        }
+
+        formatter.format("SELECT * FROM Post WHERE id = %d", postId);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new PostDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getLong("thread"),
+                    resultSet.getString("forum"),
+                    resultSet.getString("user"),
+                    resultSet.getString("message"),
+                    resultSet.getString("date"),
+                    resultSet.getLong("parent"),
+                    resultSet.getBoolean("isApproved"),
+                    resultSet.getBoolean("isHighlighted"),
+                    resultSet.getBoolean("isEdited"),
+                    resultSet.getBoolean("isSpam"),
+                    resultSet.getBoolean("isDeleted")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get post after update!", e);
+        }
+    }
+
+    public PostDataSet votePost(long postId, short vote) throws DbException {
+        if (vote == 1) {
+            formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);
+        }
+        else if (vote == -1) {
+            formatter.format("UPDATE Thread SET likes = likes - 1 WHERE id = %d;", postId);
+        }
+        else
+            return null;
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new DbException("Unable to update vote for post!", e);
+        }
+
+        formatter.format("SELECT * FROM Post WHERE id = %d", postId);
+        try {
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new PostDataSet(
+                    resultSet.getLong("id"),
+                    resultSet.getLong("thread"),
+                    resultSet.getString("forum"),
+                    resultSet.getString("user"),
+                    resultSet.getString("message"),
+                    resultSet.getString("date"),
+                    resultSet.getLong("parent"),
+                    resultSet.getBoolean("isApproved"),
+                    resultSet.getBoolean("isHighlighted"),
+                    resultSet.getBoolean("isEdited"),
+                    resultSet.getBoolean("isSpam"),
+                    resultSet.getBoolean("isDeleted"),
+                    resultSet.getLong("likes")
+            ));
+        } catch (SQLException e) {
+            throw new DbException("Unable to get post after vote!", e);
+        }
+    }
 }

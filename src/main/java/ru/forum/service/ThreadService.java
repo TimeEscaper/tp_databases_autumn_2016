@@ -10,6 +10,7 @@ import ru.forum.model.DataSet.ThreadDataSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+@SuppressWarnings("Duplicates")
 @Service
 public class ThreadService extends AbstractDbService {
 
