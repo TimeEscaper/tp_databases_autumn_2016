@@ -3,8 +3,11 @@ package ru.forum.service;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
+import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.ThreadFull;
+import ru.forum.model.full.UserFull;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -55,6 +58,80 @@ public class ThreadService extends AbstractDbService {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to close thread!", e);
+        }
+    }
+
+    public ThreadFull threadDetails(long threadId, String user, String forum) throws DbException {
+
+        String postfix = " WHERE Thread.id = " + Long.toString(threadId);
+        if (user != null)
+            postfix += " GROUP BY User.id";
+        postfix += ';';
+
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*");
+        final StringBuilder joins = new StringBuilder("FROM Thread");
+
+        if (user != null) {
+            tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                    "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
+                    "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
+            joins.append(" JOIN User ON(Thread.user = User.email) " +
+                    "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
+                    "AND User.email = UserFollowers.followee) " +
+                    "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
+                    "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                    "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+        }
+        if (forum != null) {
+            tables.append(" , forum.*");
+            joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
+        }
+
+        final String query = tables.toString() + joins + postfix;
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ThreadFull result = new ThreadFull(
+                                resultSet.getLong("Thread.id"),
+                                resultSet.getString("Thread.date"),
+                                resultSet.getString("Thread.title"),
+                                resultSet.getString("Thread.slug"),
+                                resultSet.getString("Thread.message"),
+                                resultSet.getBoolean("Thread.isClosed"),
+                                resultSet.getBoolean("Thread.isDeleted"),
+                                resultSet.getLong("Thread.likes"),
+                                resultSet.getLong("Thread.dislikes")
+                        );
+
+                        if (user != null) {
+                            result.setUser(new UserFull(
+                                    resultSet.getLong("User.id"),
+                                    resultSet.getString("User.email"),
+                                    resultSet.getString("User.username"),
+                                    resultSet.getString("User.about"),
+                                    resultSet.getString("User.name"),
+                                    resultSet.getBoolean("User.isAnonymous"),
+                                    (String[]) resultSet.getArray("followers").getArray(),
+                                    (String[]) resultSet.getArray("followees").getArray(),
+                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                            ));
+                        } else {
+                            result.setUser(resultSet.getString("Forum.user"));
+                        }
+                        if (forum != null) {
+                            result.setForum(new ForumDataSet(
+                                    resultSet.getLong("Forum.id"),
+                                    resultSet.getString("Forum.name"),
+                                    resultSet.getString("Forum.shortName"),
+                                    resultSet.getString("Forum.user")
+                            ));
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get thread or related data!", e);
         }
     }
 
