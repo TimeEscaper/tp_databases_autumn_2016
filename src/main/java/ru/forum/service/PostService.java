@@ -78,7 +78,7 @@ public class PostService extends AbstractDbService {
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id)");
                     break;
                 case "user":
-                    tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                    tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                             "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                             "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                     joins.append(" JOIN User ON(Post.user = User.email) " +

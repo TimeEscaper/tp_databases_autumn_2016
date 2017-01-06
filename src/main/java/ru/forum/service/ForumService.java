@@ -69,7 +69,7 @@ public class ForumService extends AbstractDbService {
         final StringBuilder joins = new StringBuilder("FROM Forum");
 
         if (user != null) {
-            tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+            tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                     "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
             joins.append(" JOIN User ON(Post.user = User.email) " +
@@ -147,7 +147,7 @@ public class ForumService extends AbstractDbService {
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id)");
                     break;
                 case "user":
-                    tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                    tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                             "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                             "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                     joins.append(" JOIN User ON(Post.user = User.email) " +
@@ -259,7 +259,7 @@ public class ForumService extends AbstractDbService {
                 tables.append(" , forum.*");
                 joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
             } else if (table.equals("user")) {
-                tables.append(" , Users.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                         "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                         "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                 joins.append(" JOIN User ON(Thread.user = User.email) " +
@@ -324,5 +324,52 @@ public class ForumService extends AbstractDbService {
         }
     }
 
+    public ArrayList<UserFull> listUsers(String forum, String since, Integer limit, String order) throws DbException
+    {
+        String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = " + forum;
+        if (since != null)
+            postfix += " AND Post.date >= " + since;
+        postfix += ") GROUP BY User.id ";
+
+        if (order == null)
+            postfix += " ORDER BY User.name desc";
+        else
+            postfix += "ORDER BY User.name " + order;
+        if (limit != null)
+            postfix += " LIMIT " + limit.toString();
+        postfix += ";";
+
+
+        final String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
+                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
+                "FROM User " +
+                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
+                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " + postfix;
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ArrayList<UserFull> result = new ArrayList<>();
+                        while (resultSet.next()) {
+                            result.add(new UserFull(
+                                    resultSet.getLong("User.id"),
+                                    resultSet.getString("User.email"),
+                                    resultSet.getString("User.username"),
+                                    resultSet.getString("User.about"),
+                                    resultSet.getString("User.name"),
+                                    resultSet.getBoolean("User.isAnonymous"),
+                                    (String[]) resultSet.getArray("followers").getArray(),
+                                    (String[]) resultSet.getArray("followees").getArray(),
+                                    (long[]) resultSet.getArray("subscriptions").getArray()));
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get threads or related data!", e);
+        }
+    }
 
 }
