@@ -72,7 +72,7 @@ public class ForumService extends AbstractDbService {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                     "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-            joins.append(" JOIN User ON(Post.user = User.email) " +
+            joins.append(" JOIN User ON(Forum.user = User.email) " +
                     "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
                     "AND User.email = UserFollowers.followee) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
