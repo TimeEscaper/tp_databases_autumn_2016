@@ -16,6 +16,7 @@ public class PostDataSet {
     private boolean isSpam;
     private boolean isDeleted;
     private long likes = 0;
+    private long dislikes = 0;
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
@@ -35,7 +36,7 @@ public class PostDataSet {
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
-                       long likes) {
+                       long likes, long dislikes) {
         this.id = id;
         this.thread = thread;
         this.forum = forum;
@@ -49,6 +50,7 @@ public class PostDataSet {
         this.isSpam = isSpam;
         this.isDeleted = isDeleted;
         this.likes = likes;
+        this.dislikes = dislikes;
     }
 
     public long getId() {
@@ -100,4 +102,6 @@ public class PostDataSet {
     }
 
     public long getLikes() { return likes; }
+
+    public long getDislikes() { return dislikes; }
 }

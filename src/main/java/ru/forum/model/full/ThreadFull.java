@@ -10,9 +10,11 @@ public class ThreadFull {
     private String message;
     private boolean isClosed;
     private boolean isDeleted;
+    private long likes;
+    private long dislikes;
 
     public ThreadFull(long id, String date, String title, String slug, String message, boolean isClosed,
-                      boolean isDeleted) {
+                      boolean isDeleted, long likes, long dislikes) {
         this.id = id;
         this.date = date;
         this.title = title;
@@ -20,20 +22,23 @@ public class ThreadFull {
         this.message = message;
         this.isClosed = isClosed;
         this.isDeleted = isDeleted;
+        this.likes = likes;
+        this.dislikes = dislikes;
     }
 
     public ThreadFull(long id, Object forum, Object user, String date, String title, String slug, String message,
-                      boolean isClosed, boolean isDeleted) {
+                      boolean isClosed, boolean isDeleted, long likes, long dislikes) {
         this.id = id;
         this.forum = forum;
         this.user = user;
         this.date = date;
         this.title = title;
-
         this.slug = slug;
         this.message = message;
         this.isClosed = isClosed;
         this.isDeleted = isDeleted;
+        this.likes = likes;
+        this.dislikes = dislikes;
     }
 
     public void setForum(Object forum) {
@@ -44,10 +49,7 @@ public class ThreadFull {
         this.user = user;
     }
 
-    public long getId() {
-
-        return id;
-    }
+    public long getId() { return id; }
 
     public Object getForum() {
         return forum;
@@ -77,7 +79,9 @@ public class ThreadFull {
         return isClosed;
     }
 
-    public boolean isDeleted() {
-        return isDeleted;
-    }
+    public boolean isDeleted() { return isDeleted; }
+
+    public long getLikes() { return likes; }
+
+    public long getDislikes() { return dislikes; }
 }
