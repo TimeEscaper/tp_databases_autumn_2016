@@ -17,6 +17,7 @@ public class PostFull {
     private boolean isDeleted;
     private long likes;
     private long dislikes;
+    private long points;
 
     public PostFull(long id, Object thread, Object forum, Object user, String message, String date, long parent,
                     boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
@@ -35,6 +36,7 @@ public class PostFull {
         this.isDeleted = isDeleted;
         this.likes = likes;
         this.dislikes = dislikes;
+        this.points = likes - dislikes;
     }
 
     public PostFull(long id, String message, String date, long parent, boolean isApproved, boolean isHighlighted,
@@ -50,6 +52,7 @@ public class PostFull {
         this.isDeleted = isDeleted;
         this.likes = likes;
         this.dislikes = dislikes;
+        this.points = likes - dislikes;
     }
 
     public long getId() {
@@ -115,4 +118,6 @@ public class PostFull {
     public long getLikes() { return likes; }
 
     public long getDislikes() { return dislikes; }
+
+    public long getPoints() { return points; }
 }

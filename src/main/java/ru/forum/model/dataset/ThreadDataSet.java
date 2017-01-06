@@ -18,6 +18,7 @@ public class ThreadDataSet {
     private boolean isDeleted;
     private long likes = 0;
     private long dislikes = 0;
+    private long points = 0;
 
     public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
                          boolean isClosed, boolean isDeleted) {
@@ -57,15 +58,14 @@ public class ThreadDataSet {
         this.isDeleted = isDeleted;
         this.likes = likes;
         this.dislikes = dislikes;
+        this.points = likes - dislikes;
     }
 
     public long getId() {
         return id;
     }
 
-    public String getForum() {
-        return forum;
-    }
+    public String getForum() { return forum; }
 
     public String getUser() {
         return user;
@@ -98,4 +98,6 @@ public class ThreadDataSet {
     public long getLikes() { return likes; }
 
     public long getDislikes() { return dislikes; }
+
+    public long getPoints() { return points; }
 }
