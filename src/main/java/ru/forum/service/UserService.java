@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.dataset.UserDataSet;
+import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
 import java.sql.SQLException;
@@ -63,6 +64,52 @@ public class UserService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to get user details!", e);
         }
+    }
+
+    public ArrayList<PostFull> listPosts(String email,
+                                         String since, Integer limit, String order) throws DbException {
+        String query = "SELECT * FROM Post WHERE user = '" + email + '\'';
+        if (since != null) {
+            query += " AND date >= " + since;
+        }
+        if (order == null)
+            query += " ORDER BY date desc";
+        else
+            query += "ORDER BY date " + order;
+        if (limit != null)
+            query += " LIMIT " + limit.toString();
+        query += ";";
+
+        try {
+            return executor.execQuery(getConnection(), query,
+                    resultSet -> {
+                        final ArrayList<PostFull> result = new ArrayList<>();
+                        while (resultSet.next()) {
+                            final PostFull post = new PostFull(
+                                    resultSet.getLong("id"),
+                                    resultSet.getString("thread"),
+                                    resultSet.getString("forum"),
+                                    resultSet.getString("user"),
+                                    resultSet.getString("message"),
+                                    resultSet.getString("date"),
+                                    resultSet.getLong("parent"),
+                                    resultSet.getBoolean("isApproved"),
+                                    resultSet.getBoolean("isHighlighted"),
+                                    resultSet.getBoolean("isEdited"),
+                                    resultSet.getBoolean("isSpam"),
+                                    resultSet.getBoolean("isDeleted"),
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes")
+                            );
+                            result.add(post);
+                        }
+
+                        return result;
+                    });
+        } catch (SQLException e) {
+            throw new DbException("Unable to get posts or related data!", e);
+        }
+
     }
 
     public UserFull followUser(String follower, String followee) throws DbException {
