@@ -94,7 +94,9 @@ public class ThreadService extends AbstractDbService {
                             resultSet.getString("slug"),
                             resultSet.getString("message"),
                             resultSet.getBoolean("isClosed"),
-                            resultSet.getBoolean("isDeleted")
+                            resultSet.getBoolean("isDeleted"),
+                            resultSet.getLong("likes"),
+                            resultSet.getLong("dislikes")
                     );
                     result.add(thread);
                 }
@@ -178,7 +180,9 @@ public class ThreadService extends AbstractDbService {
                     resultSet.getString("slug"),
                     resultSet.getString("message"),
                     resultSet.getBoolean("isClosed"),
-                    resultSet.getBoolean("isDeleted")
+                    resultSet.getBoolean("isDeleted"),
+                    resultSet.getLong("likes"),
+                    resultSet.getLong("dislikes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after update!", e);
@@ -187,10 +191,10 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadDataSet voteThread(long threadId, short vote) throws DbException {
         if (vote == 1) {
-            formatter.format("UPDATE Thread SET vote = vote + 1 WHERE id = %d;", threadId);
+            formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", threadId);
         }
         else if (vote == -1) {
-            formatter.format("UPDATE Thread SET vote = vote - 1 WHERE id = %d;", threadId);
+            formatter.format("UPDATE Thread SET dislikes = dislikes + 1 WHERE id = %d;", threadId);
         }
         else
             return null;
@@ -212,7 +216,9 @@ public class ThreadService extends AbstractDbService {
                     resultSet.getString("slug"),
                     resultSet.getString("message"),
                     resultSet.getBoolean("isClosed"),
-                    resultSet.getBoolean("isDeleted")
+                    resultSet.getBoolean("isDeleted"),
+                    resultSet.getLong("likes"),
+                    resultSet.getLong("dislikes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after vote update!", e);

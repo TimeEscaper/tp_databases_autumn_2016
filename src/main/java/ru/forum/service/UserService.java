@@ -25,7 +25,6 @@ public class UserService extends AbstractDbService {
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;
-            //System.out.println(updated);
             formatter.format("SELECT * FROM User WHERE email = '%s'", email);
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new UserDataSet(
                     resultSet.getLong("id"),

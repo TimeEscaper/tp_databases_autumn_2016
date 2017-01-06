@@ -177,8 +177,8 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getBoolean("Post.isEdited"),
                                     resultSet.getBoolean("Post.isSpam"),
                                     resultSet.getBoolean("Post.isDeleted"),
-                                    resultSet.getLong("likes")
-
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes")
                             );
 
                             if (related.contains("user")) {
@@ -216,7 +216,9 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("Thread.slug"),
                                         resultSet.getString("Thread.message"),
                                         resultSet.getBoolean("Thread.isClosed"),
-                                        resultSet.getBoolean("Thread.isDeleted")
+                                        resultSet.getBoolean("Thread.isDeleted"),
+                                        resultSet.getLong("Thread.likes"),
+                                        resultSet.getLong("Thread.dislikes")
                                 ));
                             } else {
                                 post.setThread(resultSet.getString("Post.thread"));
@@ -285,7 +287,9 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getString("Thread.slug"),
                                     resultSet.getString("Thread.message"),
                                     resultSet.getBoolean("Thread.isClosed"),
-                                    resultSet.getBoolean("Thread.isDeleted")
+                                    resultSet.getBoolean("Thread.isDeleted"),
+                                    resultSet.getLong("Thread.likes"),
+                                    resultSet.getLong("Thread.dislikes")
                             );
 
                             if (related.contains("user")) {

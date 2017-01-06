@@ -50,7 +50,8 @@ public class PostService extends AbstractDbService {
                     resultSet.getBoolean("isEdited"),
                     resultSet.getBoolean("isSpam"),
                     resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes")
+                    resultSet.getLong("likes"),
+                    resultSet.getLong("dislikes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get post after create!", e);
@@ -106,8 +107,8 @@ public class PostService extends AbstractDbService {
                                 resultSet.getBoolean("Post.isEdited"),
                                 resultSet.getBoolean("Post.isSpam"),
                                 resultSet.getBoolean("Post.isDeleted"),
-                                resultSet.getLong("likes")
-
+                                resultSet.getLong("likes"),
+                                resultSet.getLong("dislikes")
                         );
 
                         if (related.contains("user")) {
@@ -145,7 +146,9 @@ public class PostService extends AbstractDbService {
                                     resultSet.getString("Thread.slug"),
                                     resultSet.getString("Thread.message"),
                                     resultSet.getBoolean("Thread.isClosed"),
-                                    resultSet.getBoolean("Thread.isDeleted")
+                                    resultSet.getBoolean("Thread.isDeleted"),
+                                    resultSet.getLong("Thread.likes"),
+                                    resultSet.getLong("Thread.dislikes")
                             ));
                         } else {
                             post.setThread(resultSet.getString("Post.thread"));
@@ -192,8 +195,8 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("isEdited"),
                                     resultSet.getBoolean("isSpam"),
                                     resultSet.getBoolean("isDeleted"),
-                                    resultSet.getLong("likes")
-
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes")
                             );
                             result.add(post);
                         }
@@ -238,8 +241,8 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("isEdited"),
                                     resultSet.getBoolean("isSpam"),
                                     resultSet.getBoolean("isDeleted"),
-                                    resultSet.getLong("likes")
-
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes")
                             );
                             result.add(post);
                         }
@@ -293,7 +296,8 @@ public class PostService extends AbstractDbService {
                     resultSet.getBoolean("isEdited"),
                     resultSet.getBoolean("isSpam"),
                     resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes")
+                    resultSet.getLong("likes"),
+                    resultSet.getLong("dislikes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get post after update!", e);
@@ -304,7 +308,7 @@ public class PostService extends AbstractDbService {
         if (vote == 1) {
             formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);
         } else if (vote == -1) {
-            formatter.format("UPDATE Thread SET likes = likes - 1 WHERE id = %d;", postId);
+            formatter.format("UPDATE Thread SET dislikes = dislikes + 1 WHERE id = %d;", postId);
         } else
             return null;
         try {
@@ -330,7 +334,8 @@ public class PostService extends AbstractDbService {
                     resultSet.getBoolean("isEdited"),
                     resultSet.getBoolean("isSpam"),
                     resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes")
+                    resultSet.getLong("likes"),
+                    resultSet.getLong("dislikes")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get post after vote!", e);
