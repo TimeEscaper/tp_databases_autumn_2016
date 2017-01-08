@@ -15,8 +15,7 @@ import java.util.List;
 @Service
 public class UserService extends AbstractDbService {
 
-    public UserService() throws DbException {
-    }
+    public UserService() throws DbException { }
 
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {

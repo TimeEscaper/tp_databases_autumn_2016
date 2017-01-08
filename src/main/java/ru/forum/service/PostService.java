@@ -18,8 +18,7 @@ import java.util.List;
 @Service
 public class PostService extends AbstractDbService {
 
-    public PostService() throws DbException {
-    }
+    public PostService() throws DbException { }
 
     public PostDataSet createPost(String date, int thread, String message, String user, String forum, int parent,
                                   boolean isApproved, boolean isHighlighted, boolean isEdited,

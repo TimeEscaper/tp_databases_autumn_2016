@@ -17,8 +17,7 @@ import java.util.ArrayList;
 @Service
 public class ForumService extends AbstractDbService {
 
-    public ForumService() throws DbException {
-    }
+    public ForumService() throws DbException { }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
         formatter.format("INSERT INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
