@@ -1,5 +1,6 @@
 package ru.forum.model.full;
 
+
 @SuppressWarnings("unused")
 public class ThreadFull {
     long id;
@@ -14,9 +15,10 @@ public class ThreadFull {
     private long likes;
     private long dislikes;
     private long points;
+    private long posts;
 
     public ThreadFull(long id, String date, String title, String slug, String message, boolean isClosed,
-                      boolean isDeleted, long likes, long dislikes) {
+                      boolean isDeleted, long likes, long dislikes, long posts) {
         this.id = id;
         this.date = date;
         this.title = title;
@@ -27,10 +29,11 @@ public class ThreadFull {
         this.likes = likes;
         this.dislikes = dislikes;
         this.points = likes - dislikes;
+        this.posts = posts;
     }
 
     public ThreadFull(long id, Object forum, Object user, String date, String title, String slug, String message,
-                      boolean isClosed, boolean isDeleted, long likes, long dislikes) {
+                      boolean isClosed, boolean isDeleted, long likes, long dislikes, long posts) {
         this.id = id;
         this.forum = forum;
         this.user = user;
@@ -43,6 +46,7 @@ public class ThreadFull {
         this.likes = likes;
         this.dislikes = dislikes;
         this.points = likes - dislikes;
+        this.posts = posts;
     }
 
     public void setForum(Object forum) {
@@ -63,9 +67,7 @@ public class ThreadFull {
         return user;
     }
 
-    public String getDate() {
-        return date;
-    }
+    public String getDate() { return date; }
 
     public String getTitle() {
         return title;
@@ -90,4 +92,6 @@ public class ThreadFull {
     public long getDislikes() { return dislikes; }
 
     public long getPoints() { return points; }
+
+    public long getPosts() { return posts; }
 }

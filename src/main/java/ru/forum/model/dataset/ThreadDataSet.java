@@ -1,10 +1,6 @@
 package ru.forum.model.dataset;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 @SuppressWarnings("unused")
-@JsonIgnoreProperties({"vote"})
 public class ThreadDataSet {
 
     long id;
@@ -19,6 +15,7 @@ public class ThreadDataSet {
     private long likes = 0;
     private long dislikes = 0;
     private long points = 0;
+    private long posts = 0;
 
     public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
                          boolean isClosed, boolean isDeleted) {
@@ -34,19 +31,7 @@ public class ThreadDataSet {
     }
 
     public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
-                         boolean isClosed) {
-        this.id = id;
-        this.forum = forum;
-        this.user = user;
-        this.date = date;
-        this.title = title;
-        this.slug = slug;
-        this.message = message;
-        this.isClosed = isClosed;
-    }
-
-    public ThreadDataSet(long id, String forum, String user, String date, String title, String slug, String message,
-                         boolean isClosed, boolean isDeleted, long likes, long dislikes) {
+                         boolean isClosed, boolean isDeleted, long likes, long dislikes, long posts) {
         this.id = id;
         this.forum = forum;
         this.user = user;
@@ -59,6 +44,7 @@ public class ThreadDataSet {
         this.likes = likes;
         this.dislikes = dislikes;
         this.points = likes - dislikes;
+        this.posts = posts;
     }
 
     public long getId() {
@@ -100,4 +86,6 @@ public class ThreadDataSet {
     public long getDislikes() { return dislikes; }
 
     public long getPoints() { return points; }
+
+    public long getPosts() { return posts; }
 }
