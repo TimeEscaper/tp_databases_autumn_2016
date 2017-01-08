@@ -74,8 +74,9 @@ public class PostService extends AbstractDbService {
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*");
-                    joins.append(" JOIN Thread ON(Post.thread = Thread.id)");
+                    tables.append(" , Thread.*, COUNT(Tpost.*) AS posts");
+                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
+                            "JOIN Post AS Tpost ON(Thread.id=Tpost.thread) ");
                     break;
                 case "user":
                     tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -147,7 +148,8 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("Thread.isClosed"),
                                     resultSet.getBoolean("Thread.isDeleted"),
                                     resultSet.getLong("Thread.likes"),
-                                    resultSet.getLong("Thread.dislikes")
+                                    resultSet.getLong("Thread.dislikes"),
+                                    resultSet.getLong("posts")
                             ));
                         } else {
                             post.setThread(resultSet.getString("Post.thread"));

@@ -68,8 +68,8 @@ public class ThreadService extends AbstractDbService {
             postfix += " GROUP BY User.id";
         postfix += ';';
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*");
-        final StringBuilder joins = new StringBuilder("FROM Thread");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.*) AS posts");
+        final StringBuilder joins = new StringBuilder("FROM Thread JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
 
         if (user != null) {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -101,7 +101,8 @@ public class ThreadService extends AbstractDbService {
                                 resultSet.getBoolean("Thread.isClosed"),
                                 resultSet.getBoolean("Thread.isDeleted"),
                                 resultSet.getLong("Thread.likes"),
-                                resultSet.getLong("Thread.dislikes")
+                                resultSet.getLong("Thread.dislikes"),
+                                resultSet.getLong("posts")
                         );
 
                         if (user != null) {
@@ -151,12 +152,13 @@ public class ThreadService extends AbstractDbService {
         if (order == null)
             postfix += " ORDER BY Thread.date desc";
         else
-            postfix += "ORDER BY Post.date " + order;
+            postfix += "ORDER BY Thread.date " + order;
         if (limit != null)
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        final String query = "SELECT * FROM Thread" + postfix;
+        final String query = "SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
+                "ON(Thread.id=Tpost.thread) " + postfix;
 
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
@@ -173,7 +175,8 @@ public class ThreadService extends AbstractDbService {
                             resultSet.getBoolean("isClosed"),
                             resultSet.getBoolean("isDeleted"),
                             resultSet.getLong("likes"),
-                            resultSet.getLong("dislikes")
+                            resultSet.getLong("dislikes"),
+                            resultSet.getLong("posts")
                     );
                     result.add(thread);
                 }
@@ -246,7 +249,8 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update thread!", e);
         }
-        formatter.format("SELECT * FROM Thread WHERE id = %d;", threadId);
+        formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
+                "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
                     resultSet.getLong("id"),
@@ -259,7 +263,8 @@ public class ThreadService extends AbstractDbService {
                     resultSet.getBoolean("isClosed"),
                     resultSet.getBoolean("isDeleted"),
                     resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes")
+                    resultSet.getLong("dislikes"),
+                    resultSet.getLong("posts")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after update!", e);
@@ -282,7 +287,8 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update vote for thread!", e);
         }
-        formatter.format("SELECT * FROM Thread WHERE id = %d;", threadId);
+        formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
+                "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
                     resultSet.getLong("id"),
@@ -295,7 +301,8 @@ public class ThreadService extends AbstractDbService {
                     resultSet.getBoolean("isClosed"),
                     resultSet.getBoolean("isDeleted"),
                     resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes")
+                    resultSet.getLong("dislikes"),
+                    resultSet.getLong("posts")
             ));
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after vote update!", e);
