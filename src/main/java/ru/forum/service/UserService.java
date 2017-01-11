@@ -32,19 +32,24 @@ public class UserService extends AbstractDbService {
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {
 
-        formatter.format("INSERT INTO User(email, username, name, about, isAnon VALUES ('%s','%s','%s','%s','%d');",
+        stringBuilder.setLength(0);
+        formatter.format("INSERT IGNORE INTO User(email, username, name, about, isAnonymous) VALUES ('%s','%s','%s','%s','%d');",
                 email, username, name, about, isAnonymous ? 1 : 0);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;
-            formatter.format("SELECT * FROM User WHERE email = '%s'", email);
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new UserDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("email"),
-                    resultSet.getString("username"),
-                    resultSet.getString("about"),
-                    resultSet.getString("name"),
-                    resultSet.getBoolean("isAnonymous")));
+            stringBuilder.setLength(0);
+            formatter.format("SELECT * FROM User WHERE email = '%s';", email);
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new UserDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getString("email"),
+                        resultSet.getString("username"),
+                        resultSet.getString("about"),
+                        resultSet.getString("name"),
+                        resultSet.getBoolean("isAnonymous"));
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to add user!", e);
         }
@@ -52,6 +57,7 @@ public class UserService extends AbstractDbService {
 
 
     public UserFull getUserDetails(String email) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
@@ -61,17 +67,19 @@ public class UserService extends AbstractDbService {
                 "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " +
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new UserFull(
-                    resultSet.getLong("id"),
-                    resultSet.getString("email"),
-                    resultSet.getString("username"),
-                    resultSet.getString("about"),
-                    resultSet.getString("name"),
-                    resultSet.getBoolean("isAnonymous"),
-                    (String[]) resultSet.getArray("followers").getArray(),
-                    (String[]) resultSet.getArray("followees").getArray(),
-                    (long[]) resultSet.getArray("subscriptions").getArray()
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new UserFull(
+                        resultSet.getLong("id"),
+                        resultSet.getString("email"),
+                        resultSet.getString("username"),
+                        resultSet.getString("about"),
+                        resultSet.getString("name"),
+                        resultSet.getBoolean("isAnonymous"),
+                        (String[]) resultSet.getArray("followers").getArray(),
+                        (String[]) resultSet.getArray("followees").getArray(),
+                        (long[]) resultSet.getArray("subscriptions").getArray());
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get user details!", e);
         }
@@ -124,6 +132,7 @@ public class UserService extends AbstractDbService {
     }
 
     public UserFull followUser(String follower, String followee) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("INSERT INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
@@ -135,6 +144,7 @@ public class UserService extends AbstractDbService {
     }
 
     public UserFull unfollowUser(String follower, String followee) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("DELETE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
@@ -147,6 +157,7 @@ public class UserService extends AbstractDbService {
 
     //TODO: check query
     public List<UserFull> listFollowers(String email, int limit, String order, int sinceId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
@@ -181,6 +192,7 @@ public class UserService extends AbstractDbService {
 
     //TODO: check query
     public List<UserFull> listFollowing(String email, int limit, String order, int sinceId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
@@ -214,6 +226,7 @@ public class UserService extends AbstractDbService {
     }
 
     public UserFull updateUser(String user, String about, String name) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE User (about, name) SET ('%s','%s') WHERE email = '%s';", about, name, user);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)

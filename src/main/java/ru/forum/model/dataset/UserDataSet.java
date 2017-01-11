@@ -1,6 +1,8 @@
 package ru.forum.model.dataset;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @SuppressWarnings("unused")
 public class UserDataSet {
 
@@ -51,6 +53,7 @@ public class UserDataSet {
         return name;
     }
 
+    @JsonProperty("isAnonymous")
     public boolean isAnonymous() {
         return isAnonymous;
     }

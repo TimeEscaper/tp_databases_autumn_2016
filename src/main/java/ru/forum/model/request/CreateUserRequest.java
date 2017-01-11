@@ -8,6 +8,8 @@ public class CreateUserRequest {
     String email;
     boolean isAnonymous;
 
+    public CreateUserRequest() { }
+
     public CreateUserRequest(String username, String about, String name, String email) {
         this.username = username;
         this.about = about;
