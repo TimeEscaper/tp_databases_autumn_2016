@@ -1,5 +1,8 @@
 package ru.forum.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
@@ -10,6 +13,7 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.full.UserFull;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -17,7 +21,15 @@ import java.util.ArrayList;
 @Service
 public class ForumService extends AbstractDbService {
 
-    public ForumService() throws DbException { }
+    @Autowired
+    public ForumService(DataSource dataSource) throws DbException {
+        this.dataSource = dataSource;
+        try {
+            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DbException("Unable to get database connection!", e);
+        }
+    }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
         formatter.format("INSERT INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",

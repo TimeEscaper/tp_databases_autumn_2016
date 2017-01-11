@@ -1,16 +1,28 @@
 package ru.forum.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.DbStatus;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 
 @SuppressWarnings("unused")
 public class CommonDbService  extends AbstractDbService{
 
-    public CommonDbService() throws DbException { }
+    @Autowired
+    public CommonDbService(DataSource dataSource) throws DbException {
+        this.dataSource = dataSource;
+        try {
+            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DbException("Unable to get database connection!", e);
+        }
+    }
 
     public DbStatus getStatus() throws DbException {
         try {

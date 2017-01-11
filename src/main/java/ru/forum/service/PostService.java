@@ -1,6 +1,9 @@
 package ru.forum.service;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
@@ -10,6 +13,7 @@ import ru.forum.model.dataset.ThreadDataSet;
 import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +22,15 @@ import java.util.List;
 @Service
 public class PostService extends AbstractDbService {
 
-    public PostService() throws DbException { }
+    @Autowired
+    public PostService(DataSource dataSource) throws DbException {
+        this.dataSource = dataSource;
+        try {
+            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DbException("Unable to get database connection!", e);
+        }
+    }
 
     public PostDataSet createPost(String date, int thread, String message, String user, String forum, int parent,
                                   boolean isApproved, boolean isHighlighted, boolean isEdited,

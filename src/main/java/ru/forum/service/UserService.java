@@ -1,5 +1,8 @@
 package ru.forum.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
@@ -7,6 +10,7 @@ import ru.forum.model.dataset.UserDataSet;
 import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +19,15 @@ import java.util.List;
 @Service
 public class UserService extends AbstractDbService {
 
-    public UserService() throws DbException { }
+    @Autowired
+    public UserService(DataSource dataSource) throws DbException {
+        this.dataSource = dataSource;
+        try {
+            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DbException("Unable to get database connection!", e);
+        }
+    }
 
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {
