@@ -35,6 +35,7 @@ public class PostService extends AbstractDbService {
     public PostDataSet createPost(String date, int thread, String message, String user, String forum, int parent,
                                   boolean isApproved, boolean isHighlighted, boolean isEdited,
                                   boolean isSpam, boolean isDeleted) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("INSERT INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited,+" +
                         "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d.%d.%d.%d);",
                 thread, forum, user, message, date, parent, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
@@ -46,24 +47,27 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to create post!", e);
         }
 
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new PostDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getLong("thread"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("message"),
-                    resultSet.getString("date"),
-                    resultSet.getLong("parent"),
-                    resultSet.getBoolean("isApproved"),
-                    resultSet.getBoolean("isHighlighted"),
-                    resultSet.getBoolean("isEdited"),
-                    resultSet.getBoolean("isSpam"),
-                    resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new PostDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getLong("thread"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("message"),
+                        resultSet.getString("date"),
+                        resultSet.getLong("parent"),
+                        resultSet.getBoolean("isApproved"),
+                        resultSet.getBoolean("isHighlighted"),
+                        resultSet.getBoolean("isEdited"),
+                        resultSet.getBoolean("isSpam"),
+                        resultSet.getBoolean("isDeleted"),
+                        resultSet.getLong("likes"),
+                        resultSet.getLong("dislikes"));
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get post after create!", e);
         }
@@ -109,6 +113,7 @@ public class PostService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
+                        resultSet.next();
                         final PostFull post = new PostFull(
                                 resultSet.getLong("Post.id"),
                                 resultSet.getString("Post.message"),
@@ -268,6 +273,7 @@ public class PostService extends AbstractDbService {
     }
 
     public boolean removePost(long postId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Post (isDeleted) SET (1) WHERE id = %d;", postId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -277,6 +283,7 @@ public class PostService extends AbstractDbService {
     }
 
     public boolean restorePost(long postId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Post (isDeleted) SET (0) WHERE id = %d;", postId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -286,6 +293,7 @@ public class PostService extends AbstractDbService {
     }
 
     public PostDataSet updatePost(long postId, String message) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Post(message) SET('%s') WHERE id=%d;", message, postId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
@@ -294,30 +302,34 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to update post!", e);
         }
 
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Post WHERE id = %d", postId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new PostDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getLong("thread"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("message"),
-                    resultSet.getString("date"),
-                    resultSet.getLong("parent"),
-                    resultSet.getBoolean("isApproved"),
-                    resultSet.getBoolean("isHighlighted"),
-                    resultSet.getBoolean("isEdited"),
-                    resultSet.getBoolean("isSpam"),
-                    resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new PostDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getLong("thread"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("message"),
+                        resultSet.getString("date"),
+                        resultSet.getLong("parent"),
+                        resultSet.getBoolean("isApproved"),
+                        resultSet.getBoolean("isHighlighted"),
+                        resultSet.getBoolean("isEdited"),
+                        resultSet.getBoolean("isSpam"),
+                        resultSet.getBoolean("isDeleted"),
+                        resultSet.getLong("likes"),
+                        resultSet.getLong("dislikes"));
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get post after update!", e);
         }
     }
 
     public PostDataSet votePost(long postId, short vote) throws DbException {
+        stringBuilder.setLength(0);
         if (vote == 1) {
             formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);
         } else if (vote == -1) {
@@ -332,24 +344,28 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to update vote for post!", e);
         }
 
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Post WHERE id = %d", postId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new PostDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getLong("thread"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("message"),
-                    resultSet.getString("date"),
-                    resultSet.getLong("parent"),
-                    resultSet.getBoolean("isApproved"),
-                    resultSet.getBoolean("isHighlighted"),
-                    resultSet.getBoolean("isEdited"),
-                    resultSet.getBoolean("isSpam"),
-                    resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new PostDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getLong("thread"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("message"),
+                        resultSet.getString("date"),
+                        resultSet.getLong("parent"),
+                        resultSet.getBoolean("isApproved"),
+                        resultSet.getBoolean("isHighlighted"),
+                        resultSet.getBoolean("isEdited"),
+                        resultSet.getBoolean("isSpam"),
+                        resultSet.getBoolean("isDeleted"),
+                        resultSet.getLong("likes"),
+                        resultSet.getLong("dislikes")
+                );
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get post after vote!", e);
         }

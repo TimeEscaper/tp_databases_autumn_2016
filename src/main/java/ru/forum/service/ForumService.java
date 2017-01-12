@@ -32,7 +32,8 @@ public class ForumService extends AbstractDbService {
     }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
-        formatter.format("INSERT INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
+        stringBuilder.setLength(0);
+        formatter.format("INSERT IGNORE INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
                 name, shortName, user);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
@@ -41,14 +42,18 @@ public class ForumService extends AbstractDbService {
             throw new DbException("Unable to create forum!", e);
         }
 
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ForumDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("name"),
-                    resultSet.getString("short_name"),
-                    resultSet.getString("user")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                        resultSet.next();
+                        return new ForumDataSet(
+                                resultSet.getLong("id"),
+                                resultSet.getString("name"),
+                                resultSet.getString("short_name"),
+                                resultSet.getString("user"));
+                    }
+            );
         } catch (SQLException e) {
             throw new DbException("Unable to get forum after create!", e);
         }
@@ -56,14 +61,17 @@ public class ForumService extends AbstractDbService {
 
     //Get forum short info
     public ForumDataSet getForum(String shortName) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ForumDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("name"),
-                    resultSet.getString("short_name"),
-                    resultSet.getString("user")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new ForumDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("short_name"),
+                        resultSet.getString("user"));
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get forum dataset!", e);
         }
@@ -96,6 +104,7 @@ public class ForumService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
+                        resultSet.next();
                         final ForumFull result = new ForumFull(
                                 resultSet.getLong("Forum.id"),
                                 resultSet.getString("Forum.name"),
@@ -342,8 +351,7 @@ public class ForumService extends AbstractDbService {
         }
     }
 
-    public ArrayList<UserFull> listUsers(String forum, String since, Integer limit, String order) throws DbException
-    {
+    public ArrayList<UserFull> listUsers(String forum, String since, Integer limit, String order) throws DbException {
         String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = " + forum;
         if (since != null)
             postfix += " AND Post.date >= " + since;

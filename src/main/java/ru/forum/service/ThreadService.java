@@ -32,7 +32,7 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadDataSet createThread(String forum, String title, String user, String date, String message,
                                       String slug, boolean isClosed, boolean isDeleted) throws DbException {
-
+        stringBuilder.setLength(0);
         formatter.format("INSERT INTO Thread(forum,title,user,date,message,slug,isClosed,isDeleted) " +
                 "VALUES('%s','%s','%s','%s','%s','%s','%d','%d');", forum, title, user, date, message, slug,
                 isClosed ? 1 : 0, isDeleted ? 1 : 0);
@@ -45,26 +45,31 @@ public class ThreadService extends AbstractDbService {
             throw new DbException("Unable to create thread!", e);
         }
 
+        stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Thread WHERE forum = '%s' AND title = '%s' AND date = '%s';",
                 forum, title, date);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("date"),
-                    resultSet.getString("title"),
-                    resultSet.getString("slug"),
-                    resultSet.getString("message"),
-                    resultSet.getBoolean("isClosed"),
-                    resultSet.getBoolean("isDeleted")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new ThreadDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("date"),
+                        resultSet.getString("title"),
+                        resultSet.getString("slug"),
+                        resultSet.getString("message"),
+                        resultSet.getBoolean("isClosed"),
+                        resultSet.getBoolean("isDeleted")
+                );
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get thread!", e);
         }
     }
 
     public boolean closeThread(long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -104,6 +109,7 @@ public class ThreadService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
+                        resultSet.next();
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
                                 resultSet.getString("Thread.date"),
@@ -201,6 +207,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public boolean openThread(long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -210,6 +217,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public boolean removeThread(long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -219,6 +227,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public boolean restoreThread(long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
@@ -229,6 +238,7 @@ public class ThreadService extends AbstractDbService {
 
     //TODO: check if already subscribe (through DB schema or through query)
     public SubscriptionDataSet subscribeThread(String userId, long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("INSERT INTO Subscription(thread, user) VALUES(%d, '%s');", threadId, userId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
@@ -241,6 +251,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public SubscriptionDataSet unsubscribeThread(String userId, long threadId) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("DELETE From Subscription WHERE user = '%s' AND thread = %d;", userId, threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
@@ -253,6 +264,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public ThreadDataSet updateThread(long threadId, String slug, String message) throws DbException {
+        stringBuilder.setLength(0);
         formatter.format("UPDATE Thread(slug,message) SET('%s','%s') WHERE id = %d;", slug, message, threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
@@ -264,26 +276,30 @@ public class ThreadService extends AbstractDbService {
         formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
                 "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("date"),
-                    resultSet.getString("title"),
-                    resultSet.getString("slug"),
-                    resultSet.getString("message"),
-                    resultSet.getBoolean("isClosed"),
-                    resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes"),
-                    resultSet.getLong("posts")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new ThreadDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("date"),
+                        resultSet.getString("title"),
+                        resultSet.getString("slug"),
+                        resultSet.getString("message"),
+                        resultSet.getBoolean("isClosed"),
+                        resultSet.getBoolean("isDeleted"),
+                        resultSet.getLong("likes"),
+                        resultSet.getLong("dislikes"),
+                        resultSet.getLong("posts")
+                );
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after update!", e);
         }
     }
 
     public ThreadDataSet voteThread(long threadId, short vote) throws DbException {
+        stringBuilder.setLength(0);
         if (vote == 1) {
             formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", threadId);
         }
@@ -299,23 +315,27 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update vote for thread!", e);
         }
+        stringBuilder.setLength(0);
         formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
                 "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> new ThreadDataSet(
-                    resultSet.getLong("id"),
-                    resultSet.getString("forum"),
-                    resultSet.getString("user"),
-                    resultSet.getString("date"),
-                    resultSet.getString("title"),
-                    resultSet.getString("slug"),
-                    resultSet.getString("message"),
-                    resultSet.getBoolean("isClosed"),
-                    resultSet.getBoolean("isDeleted"),
-                    resultSet.getLong("likes"),
-                    resultSet.getLong("dislikes"),
-                    resultSet.getLong("posts")
-            ));
+            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+                resultSet.next();
+                return new ThreadDataSet(
+                        resultSet.getLong("id"),
+                        resultSet.getString("forum"),
+                        resultSet.getString("user"),
+                        resultSet.getString("date"),
+                        resultSet.getString("title"),
+                        resultSet.getString("slug"),
+                        resultSet.getString("message"),
+                        resultSet.getBoolean("isClosed"),
+                        resultSet.getBoolean("isDeleted"),
+                        resultSet.getLong("likes"),
+                        resultSet.getLong("dislikes"),
+                        resultSet.getLong("posts")
+                );
+            });
         } catch (SQLException e) {
             throw new DbException("Unable to get thread after vote update!", e);
         }
