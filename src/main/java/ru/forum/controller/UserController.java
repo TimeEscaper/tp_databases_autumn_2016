@@ -10,6 +10,7 @@ import ru.forum.model.Response;
 import ru.forum.model.dataset.UserDataSet;
 import ru.forum.model.full.UserFull;
 import ru.forum.model.request.CreateUserRequest;
+import ru.forum.model.request.FollowUserRequest;
 import ru.forum.service.UserService;
 
 @SuppressWarnings("unused")
@@ -48,6 +49,19 @@ public class UserController {
             return ResponseEntity.ok(new Response<>(0, user));
         } catch (DbException e) {
             LOGGER.error("Unable to get user from database:", e);
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
+    }
+
+    @RequestMapping(path = "/api/user/follow/", method = RequestMethod.POST)
+    private ResponseEntity followUser(@RequestBody FollowUserRequest request) {
+        try {
+            final UserFull user = userService.followUser(request.getFollower(), request.getFollowee());
+            if (user == null)
+                return ResponseEntity.ok(new Response<>(1, "No such user"));
+            return ResponseEntity.ok(new Response<>(0, user));
+        } catch (DbException e) {
+            LOGGER.error("Unable to follow user:", e);
             return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
         }
     }

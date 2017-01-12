@@ -96,7 +96,7 @@ public class ForumService extends AbstractDbService {
                     "AND User.email = UserFollowers.followee) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                     "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                    "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+                    "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
         }
 
         final String query = tables.toString() + joins + postfix;
@@ -119,9 +119,9 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    (String[]) resultSet.getArray("followers").getArray(),
-                                    (String[]) resultSet.getArray("followees").getArray(),
-                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                                    resultSet.getString("User.followers"),
+                                    resultSet.getString("User.followees"),
+                                    resultSet.getString("User.subscriptions")
                             ));
                         } else {
                             result.setUser(resultSet.getString("Forum.user"));
@@ -176,7 +176,7 @@ public class ForumService extends AbstractDbService {
                             "AND User.email = UserFollowers.followee) " +
                             "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                             "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                            "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+                            "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
                     break;
             }
         }
@@ -210,9 +210,9 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.about"),
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous"),
-                                        (String[]) resultSet.getArray("followers").getArray(),
-                                        (String[]) resultSet.getArray("followees").getArray(),
-                                        (long[]) resultSet.getArray("subscriptions").getArray()
+                                        resultSet.getString("User.followers"),
+                                        resultSet.getString("User.followees"),
+                                        resultSet.getString("User.subscriptions")
                                 ));
                             } else {
                                 post.setUser(resultSet.getString("Post.user"));
@@ -291,7 +291,7 @@ public class ForumService extends AbstractDbService {
                         "AND User.email = UserFollowers.followee) " +
                         "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                         "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                        "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+                        "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
             }
         }
 
@@ -323,9 +323,9 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.about"),
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous"),
-                                        (String[]) resultSet.getArray("followers").getArray(),
-                                        (String[]) resultSet.getArray("followees").getArray(),
-                                        (long[]) resultSet.getArray("subscriptions").getArray()
+                                        resultSet.getString("User.followers"),
+                                        resultSet.getString("User.followees"),
+                                        resultSet.getString("User.subscriptions")
                                 ));
                             } else {
                                 thread.setUser(resultSet.getString("Post.user"));
@@ -372,7 +372,7 @@ public class ForumService extends AbstractDbService {
                 "FROM User " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " + postfix;
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " + postfix;
 
         try {
             return executor.execQuery(getConnection(), query,
@@ -386,9 +386,9 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    (String[]) resultSet.getArray("followers").getArray(),
-                                    (String[]) resultSet.getArray("followees").getArray(),
-                                    (long[]) resultSet.getArray("subscriptions").getArray()));
+                                    resultSet.getString("User.followers"),
+                                    resultSet.getString("User.followees"),
+                                    resultSet.getString("User.subscriptions")));
                         }
 
                         return result;

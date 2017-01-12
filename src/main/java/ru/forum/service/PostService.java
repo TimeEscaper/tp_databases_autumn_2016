@@ -103,7 +103,7 @@ public class PostService extends AbstractDbService {
                             "AND User.email = UserFollowers.followee) " +
                             "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                             "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                            "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+                            "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
                     break;
             }
         }
@@ -136,9 +136,9 @@ public class PostService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    (String[]) resultSet.getArray("followers").getArray(),
-                                    (String[]) resultSet.getArray("followees").getArray(),
-                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                                    resultSet.getString("User.followers"),
+                                    resultSet.getString("User.followees"),
+                                    resultSet.getString("User.subscriptions")
                             ));
                         } else {
                             post.setUser(resultSet.getString("Post.user"));

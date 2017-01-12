@@ -9,12 +9,14 @@ import ru.forum.database.exception.DbException;
 import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings({"Duplicates", "unused"})
 @Service
@@ -97,7 +99,7 @@ public class ThreadService extends AbstractDbService {
                     "AND User.email = UserFollowers.followee) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                     "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                    "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) ");
+                    "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
         }
         if (forum != null) {
             tables.append(" , forum.*");
@@ -131,9 +133,9 @@ public class ThreadService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    (String[]) resultSet.getArray("followers").getArray(),
-                                    (String[]) resultSet.getArray("followees").getArray(),
-                                    (long[]) resultSet.getArray("subscriptions").getArray()
+                                    resultSet.getString("User.followers"),
+                                    resultSet.getString("User.followees"),
+                                    resultSet.getString("User.subscriptions")
                             ));
                         } else {
                             result.setUser(resultSet.getString("Forum.user"));
@@ -341,5 +343,23 @@ public class ThreadService extends AbstractDbService {
         }
 
     }
+
+    /*public ArrayList<PostFull> listPosts(long threadId, String since, Integer limit, String order, String sort)
+        throws DbException {
+
+        String postfix = " WHERE Post.thread = '" + Long.toString(threadId) + '\'';
+        if (since != null) {
+            postfix += " AND Post.date >= " + since;
+        }
+        if (order == null)
+            postfix += " ORDER BY Post.date desc";
+        else
+            postfix += "ORDER BY Post.date " + order;
+        if (limit != null)
+            postfix += " LIMIT " + limit.toString();
+        postfix += ";";
+
+
+    } */
 
 }

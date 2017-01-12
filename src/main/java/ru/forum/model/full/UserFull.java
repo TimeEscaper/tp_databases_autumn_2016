@@ -1,5 +1,9 @@
 package ru.forum.model.full;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 @SuppressWarnings("unused")
 public class UserFull {
 
@@ -9,21 +13,31 @@ public class UserFull {
     private String about;
     private String name;
     private boolean isAnonymous;
-    private String[] followers;
-    private String[] following;
-    private long[] subscriptions;
+    private List<String> followers = new ArrayList<>();
+    private List<String> following = new ArrayList<>();
+    private List<Long> subscriptions = new ArrayList<>();
 
     public UserFull(long id, String email, String username, String about, String name, boolean isAnonymous,
-                    String[] followers, String[] following, long[] subscriptions) {
+                    String followers, String following, String subscriptions) {
         this.id = id;
         this.email = email;
         this.username = username;
         this.about = about;
         this.name = name;
         this.isAnonymous = isAnonymous;
-        this.followers = followers;
-        this.following = following;
-        this.subscriptions = subscriptions;
+        if (followers != null) {
+            final String[] followersSplit = followers.split(",");
+            Collections.addAll(this.followers, followersSplit);
+        }
+        if (following != null) {
+            final String[] followingSplit = followers.split(",");
+            Collections.addAll(this.followers, followingSplit);
+        }
+        if (subscriptions != null) {
+            final String[] split = followers.split(",");
+            for (String str : split)
+                this.subscriptions.add(Long.parseLong(str));
+        }
     }
 
     public long getId() {
@@ -50,15 +64,15 @@ public class UserFull {
         return isAnonymous;
     }
 
-    public String[] getFollowers() {
+    public List<String> getFollowers() {
         return followers;
     }
 
-    public String[] getFollowing() {
+    public List<String> getFollowing() {
         return following;
     }
 
-    public long[] getSubscriptions() {
+    public List<Long> getSubscriptions() {
         return subscriptions;
     }
 }

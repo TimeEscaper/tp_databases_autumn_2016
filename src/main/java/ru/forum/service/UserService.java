@@ -11,6 +11,7 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,9 +64,10 @@ public class UserService extends AbstractDbService {
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " +
+                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
+        System.out.println(formatter.toString());
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -76,9 +78,9 @@ public class UserService extends AbstractDbService {
                         resultSet.getString("about"),
                         resultSet.getString("name"),
                         resultSet.getBoolean("isAnonymous"),
-                        (String[]) resultSet.getArray("followers").getArray(),
-                        (String[]) resultSet.getArray("followees").getArray(),
-                        (long[]) resultSet.getArray("subscriptions").getArray());
+                        resultSet.getString("followers"),
+                        resultSet.getString("followees"),
+                        resultSet.getString("subscriptions"));
             });
         } catch (SQLException e) {
             throw new DbException("Unable to get user details!", e);
@@ -139,6 +141,9 @@ public class UserService extends AbstractDbService {
                 return null;
             return getUserDetails(follower);
         } catch (SQLException e) {
+            //TODO: Fix into query
+            if (e.getErrorCode() == 1062)
+                return getUserDetails(follower);
             throw new DbException("Unable to follow user!", e);
         }
     }
@@ -166,7 +171,7 @@ public class UserService extends AbstractDbService {
                 "AND User.email = UserFollowers.follower) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " +
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "GROUP BY  User.id;", email);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
@@ -179,9 +184,9 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("about"),
                             resultSet.getString("name"),
                             resultSet.getBoolean("isAnonymous"),
-                            (String[]) resultSet.getArray("followers").getArray(),
-                            (String[]) resultSet.getArray("followees").getArray(),
-                            (long[]) resultSet.getArray("subscriptions").getArray()));
+                            resultSet.getString("followers"),
+                            resultSet.getString("followees"),
+                            resultSet.getString("subscriptions")));
                 }
                 return result;
             });
@@ -201,7 +206,7 @@ public class UserService extends AbstractDbService {
                 "AND User.email = UserFollowers.followee) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscriptions AS Subs ON (User.email = Subs.user) " +
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "GROUP BY  User.id;", email);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
@@ -214,9 +219,9 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("about"),
                             resultSet.getString("name"),
                             resultSet.getBoolean("isAnonymous"),
-                            (String[]) resultSet.getArray("followers").getArray(),
-                            (String[]) resultSet.getArray("followees").getArray(),
-                            (long[]) resultSet.getArray("subscriptions").getArray()));
+                            resultSet.getString("followers"),
+                            resultSet.getString("followees"),
+                            resultSet.getString("subscriptions")));
                 }
                 return result;
             });
