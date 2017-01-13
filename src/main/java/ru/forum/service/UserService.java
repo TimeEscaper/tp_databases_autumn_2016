@@ -155,20 +155,28 @@ public class UserService extends AbstractDbService {
     }
 
     //TODO: check query
-    public List<UserFull> listFollowers(String email, int limit, String order, int sinceId) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+    public List<UserFull> listFollowers(String email, Integer limit, String order, Integer sinceId) throws DbException {
+        String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
-                "JOIN Follow AS UserFollowers ON (UserFollowers.followee = '%s' " +
+                "JOIN Follow AS UserFollowers ON (UserFollowers.followee = '" + email + "' " +
                 "AND User.email = UserFollowers.follower) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
-                "GROUP BY  User.id;", email);
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
+        if (sinceId != null)
+            query += " WHERE User.id > " + sinceId.toString();
+        query += " GROUP BY User.id ORDER BY User.name ";
+        if (order == null)
+            query += "desc ";
+        else
+            query += order;
+        if (limit != null)
+            query += "LIMIT " + limit.toString();
+        query += ';';
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
                     result.add(new UserFull(
@@ -190,20 +198,28 @@ public class UserService extends AbstractDbService {
     }
 
     //TODO: check query
-    public List<UserFull> listFollowing(String email, int limit, String order, int sinceId) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+    public List<UserFull> listFollowing(String email, Integer limit, String order, Integer sinceId) throws DbException {
+        String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
-                "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
+                "JOIN Follow AS UserFollowers ON (UserFollowers.following = '" + email + "' " +
                 "AND User.email = UserFollowers.followee) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
-                "GROUP BY  User.id;", email);
+                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
+        if (sinceId != null)
+            query += " WHERE User.id > " + sinceId.toString();
+        query += " GROUP BY User.id ORDER BY User.name ";
+        if (order == null)
+            query += "desc ";
+        else
+            query += order;
+        if (limit != null)
+            query += "LIMIT " + limit.toString();
+        query += ';';
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
                     result.add(new UserFull(
