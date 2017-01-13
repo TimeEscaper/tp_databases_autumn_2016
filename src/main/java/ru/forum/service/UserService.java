@@ -242,7 +242,7 @@ public class UserService extends AbstractDbService {
 
     public UserFull updateUser(String user, String about, String name) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE User (about, name) SET ('%s','%s') WHERE email = '%s';", about, name, user);
+        formatter.format("UPDATE IGNORE User (about, name) SET ('%s','%s') WHERE email = '%s';", about, name, user);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;

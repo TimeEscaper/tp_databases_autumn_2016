@@ -8,10 +8,14 @@ import org.springframework.web.bind.annotation.*;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.Response;
 import ru.forum.model.dataset.UserDataSet;
+import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 import ru.forum.model.request.CreateUserRequest;
 import ru.forum.model.request.FollowUserRequest;
+import ru.forum.model.request.UpdateUserRequest;
 import ru.forum.service.UserService;
+
+import java.util.List;
 
 @SuppressWarnings({"unused", "Duplicates"})
 @RestController
@@ -82,6 +86,57 @@ public class UserController {
     @RequestMapping(path = "/api/user/listFollowers/", method = RequestMethod.GET)
     public ResponseEntity listFollowers(@RequestParam(value = "user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
-                                        @RequestParam(value = ""))
+                                        @RequestParam(value = "order", required = false) String order,
+                                        @RequestParam(value = "since_id", required = false) Integer sinceId) {
+        try {
+            final List<UserFull> followers = userService.listFollowers(email, limit, order, sinceId);
+            return ResponseEntity.ok(new Response<>(0, followers));
+        } catch (DbException e) {
+            LOGGER.error("Unable to listFollowers:",e );
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
+    }
+
+    @RequestMapping(path = "/api/user/listFollowers/", method = RequestMethod.GET)
+    public ResponseEntity listFollowing(@RequestParam(value = "user") String email,
+                                        @RequestParam(value = "limit", required = false) Integer limit,
+                                        @RequestParam(value = "order", required = false) String order,
+                                        @RequestParam(value = "since_id", required = false) Integer sinceId) {
+        try {
+            final List<UserFull> followings = userService.listFollowing(email, limit, order, sinceId);
+            return ResponseEntity.ok(new Response<>(0, followings));
+        } catch (DbException e) {
+            LOGGER.error("Unable to listFollowing:",e );
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
+    }
+
+    @RequestMapping(path = "/api/user/listPosts/", method = RequestMethod.GET)
+    public ResponseEntity listFollowing(@RequestParam(value = "user") String email,
+                                        @RequestParam(value = "limit", required = false) Integer limit,
+                                        @RequestParam(value = "order", required = false) String order,
+                                        @RequestParam(value = "since", required = false) String since) {
+        try {
+            final List<PostFull> posts = userService.listPosts(email, since, limit, order);
+            return ResponseEntity.ok(new Response<>(0, posts));
+        } catch (DbException e) {
+            LOGGER.error("Unable to list posts:",e );
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
+    }
+
+
+    @RequestMapping(path = "/api/user/updateProfile/", method = RequestMethod.POST)
+    public ResponseEntity updateUser(@RequestBody UpdateUserRequest request) {
+        try {
+            final UserFull user = userService.updateUser(request.getUser(), request.getAbout(), request.getName());
+            if (user == null)
+                return ResponseEntity.ok(new Response<>(1, "No such user"));
+            return ResponseEntity.ok(new Response<>(0, user));
+        } catch (DbException e) {
+            LOGGER.error("Unable to update user:", e);
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
+    }
 
 }
