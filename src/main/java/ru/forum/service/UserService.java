@@ -67,7 +67,6 @@ public class UserService extends AbstractDbService {
                 "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
-        System.out.println(formatter.toString());
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -135,25 +134,20 @@ public class UserService extends AbstractDbService {
 
     public UserFull followUser(String follower, String followee) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("INSERT INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
+        formatter.format("INSERT IGNORE INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
-                return null;
+            executor.execUpdate(getConnection(), formatter.toString());
             return getUserDetails(follower);
         } catch (SQLException e) {
-            //TODO: Fix into query
-            if (e.getErrorCode() == 1062)
-                return getUserDetails(follower);
             throw new DbException("Unable to follow user!", e);
         }
     }
 
     public UserFull unfollowUser(String follower, String followee) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("DELETE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
+        formatter.format("DELETE IGNORE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
-                return null;
+            executor.execUpdate(getConnection(), formatter.toString());
             return getUserDetails(follower);
         } catch (SQLException e) {
             throw new DbException("Unable to unfollow user!", e);

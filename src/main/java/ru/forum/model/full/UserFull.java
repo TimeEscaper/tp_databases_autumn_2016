@@ -30,11 +30,11 @@ public class UserFull {
             Collections.addAll(this.followers, followersSplit);
         }
         if (following != null) {
-            final String[] followingSplit = followers.split(",");
+            final String[] followingSplit = following.split(",");
             Collections.addAll(this.followers, followingSplit);
         }
         if (subscriptions != null) {
-            final String[] split = followers.split(",");
+            final String[] split = subscriptions.split(",");
             for (String str : split)
                 this.subscriptions.add(Long.parseLong(str));
         }
