@@ -69,7 +69,8 @@ public class UserService extends AbstractDbService {
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
-                resultSet.next();
+                if (!resultSet.next())
+                    return null;
                 return new UserFull(
                         resultSet.getLong("id"),
                         resultSet.getString("email"),
@@ -132,6 +133,7 @@ public class UserService extends AbstractDbService {
 
     }
 
+    //TODO: user existance
     public UserFull followUser(String follower, String followee) throws DbException {
         stringBuilder.setLength(0);
         formatter.format("INSERT IGNORE INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
@@ -178,7 +180,9 @@ public class UserService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
+                int count = 0;
                 while (resultSet.next()) {
+                    count++;
                     result.add(new UserFull(
                             resultSet.getLong("id"),
                             resultSet.getString("email"),
@@ -190,6 +194,8 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("followees"),
                             resultSet.getString("subscriptions")));
                 }
+                if (count == 0)
+                    return null;
                 return result;
             });
         } catch (SQLException e) {
@@ -221,7 +227,9 @@ public class UserService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
+                int count = 0;
                 while (resultSet.next()) {
+                    count++;
                     result.add(new UserFull(
                             resultSet.getLong("id"),
                             resultSet.getString("email"),
@@ -233,6 +241,8 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("followees"),
                             resultSet.getString("subscriptions")));
                 }
+                if (count == 0)
+                    return null;
                 return result;
             });
         } catch (SQLException e) {

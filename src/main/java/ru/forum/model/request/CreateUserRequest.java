@@ -6,7 +6,7 @@ public class CreateUserRequest {
     String about;
     String name;
     String email;
-    boolean isAnonymous;
+    boolean isAnonymous = false;
 
     public CreateUserRequest() { }
 

@@ -72,7 +72,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean closeThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -80,17 +80,20 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    public ThreadFull threadDetails(long threadId, String user, String forum) throws DbException {
+    public ThreadFull threadDetails(long threadId, ArrayList<String> related) throws DbException {
+
+        final boolean containsUser = related.contains("user");
+        final boolean containsForum = related.contains("forum");
 
         String postfix = " WHERE Thread.id = " + Long.toString(threadId);
-        if (user != null)
+        if (containsUser)
             postfix += " GROUP BY User.id";
         postfix += ';';
 
         final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.*) AS posts");
         final StringBuilder joins = new StringBuilder("FROM Thread JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
 
-        if (user != null) {
+        if (containsUser) {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                     "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
@@ -101,7 +104,7 @@ public class ThreadService extends AbstractDbService {
                     "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
                     "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
         }
-        if (forum != null) {
+        if (containsForum) {
             tables.append(" , forum.*");
             joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
         }
@@ -111,7 +114,8 @@ public class ThreadService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        resultSet.next();
+                        if (resultSet.next())
+                            return null;
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
                                 resultSet.getString("Thread.date"),
@@ -125,7 +129,7 @@ public class ThreadService extends AbstractDbService {
                                 resultSet.getLong("posts")
                         );
 
-                        if (user != null) {
+                        if (containsUser) {
                             result.setUser(new UserFull(
                                     resultSet.getLong("User.id"),
                                     resultSet.getString("User.email"),
@@ -138,15 +142,17 @@ public class ThreadService extends AbstractDbService {
                                     resultSet.getString("User.subscriptions")
                             ));
                         } else {
-                            result.setUser(resultSet.getString("Forum.user"));
+                            result.setUser(resultSet.getString("Thread.user"));
                         }
-                        if (forum != null) {
+                        if (containsForum) {
                             result.setForum(new ForumDataSet(
                                     resultSet.getLong("Forum.id"),
                                     resultSet.getString("Forum.name"),
                                     resultSet.getString("Forum.shortName"),
                                     resultSet.getString("Forum.user")
                             ));
+                        } else {
+                            result.setForum(resultSet.getString("Thread.forum"));
                         }
 
                         return result;
@@ -200,7 +206,6 @@ public class ThreadService extends AbstractDbService {
                     );
                     result.add(thread);
                 }
-
                 return result;
             });
         } catch (SQLException e) {
@@ -210,7 +215,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean openThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -220,7 +225,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean removeThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -230,7 +235,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean restoreThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -241,7 +246,7 @@ public class ThreadService extends AbstractDbService {
     //TODO: check if already subscribe (through DB schema or through query)
     public SubscriptionDataSet subscribeThread(String userId, long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("INSERT INTO Subscription(thread, user) VALUES(%d, '%s');", threadId, userId);
+        formatter.format("INSERT IGNORE INTO Subscription(thread, user) VALUES(%d, '%s');", threadId, userId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;
@@ -254,7 +259,7 @@ public class ThreadService extends AbstractDbService {
 
     public SubscriptionDataSet unsubscribeThread(String userId, long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("DELETE From Subscription WHERE user = '%s' AND thread = %d;", userId, threadId);
+        formatter.format("DELETE IGNORE From Subscription WHERE user = '%s' AND thread = %d;", userId, threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;
@@ -267,7 +272,7 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadDataSet updateThread(long threadId, String slug, String message) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Thread(slug,message) SET('%s','%s') WHERE id = %d;", slug, message, threadId);
+        formatter.format("UPDATE IGNORE Thread(slug,message) SET('%s','%s') WHERE id = %d;", slug, message, threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;
@@ -300,13 +305,13 @@ public class ThreadService extends AbstractDbService {
         }
     }
 
-    public ThreadDataSet voteThread(long threadId, short vote) throws DbException {
+    public ThreadDataSet voteThread(long threadId, int vote) throws DbException {
         stringBuilder.setLength(0);
         if (vote == 1) {
-            formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", threadId);
+            formatter.format("UPDATE IGNORE Thread SET likes = likes + 1 WHERE id = %d;", threadId);
         }
         else if (vote == -1) {
-            formatter.format("UPDATE Thread SET dislikes = dislikes + 1 WHERE id = %d;", threadId);
+            formatter.format("UPDATE IGNORE Thread SET dislikes = dislikes + 1 WHERE id = %d;", threadId);
         }
         else
             return null;
