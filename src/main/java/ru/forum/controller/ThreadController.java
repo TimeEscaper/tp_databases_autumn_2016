@@ -73,30 +73,28 @@ public class ThreadController {
     }
 
     @RequestMapping(path = "/api/thread/list/", method = RequestMethod.GET)
-    public ResponseEntity listThreadByUser(@RequestParam(value = "user") String user,
+    public ResponseEntity listThread(@RequestParam(value = "user") String user,
+                                           @RequestParam(value = "forum") String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,
                                            @RequestParam(value = "since", required = false) String since) {
-        try {
-            final ArrayList<ThreadDataSet> list = threadService.listThread(user, true, since, limit, order);
-            return ResponseEntity.ok(new Response<>(0, list));
-        } catch (DbException e) {
-            LOGGER.error("Unable to list threads:", e);
-            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        if (forum == null) {
+            try {
+                final ArrayList<ThreadDataSet> list = threadService.listThread(user, true, since, limit, order);
+                return ResponseEntity.ok(new Response<>(0, list));
+            } catch (DbException e) {
+                LOGGER.error("Unable to list threads:", e);
+                return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+            }
         }
-    }
-
-    @RequestMapping(path = "/api/thread/list/", method = RequestMethod.GET)
-    public ResponseEntity listThreadByForum(@RequestParam(value = "forum") String forum,
-                                           @RequestParam(value = "limit", required = false) Integer limit,
-                                           @RequestParam(value = "order", required = false) String order,
-                                           @RequestParam(value = "since", required = false) String since) {
-        try {
-            final ArrayList<ThreadDataSet> list = threadService.listThread(forum, false, since, limit, order);
-            return ResponseEntity.ok(new Response<>(0, list));
-        } catch (DbException e) {
-            LOGGER.error("Unable to list threads:", e);
-            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        else {
+            try {
+                final ArrayList<ThreadDataSet> list = threadService.listThread(forum, false, since, limit, order);
+                return ResponseEntity.ok(new Response<>(0, list));
+            } catch (DbException e) {
+                LOGGER.error("Unable to list threads:", e);
+                return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+            }
         }
     }
 

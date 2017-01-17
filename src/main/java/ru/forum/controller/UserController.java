@@ -97,7 +97,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/listFollowers/", method = RequestMethod.GET)
+    @RequestMapping(path = "/api/user/listFollowing/", method = RequestMethod.GET)
     public ResponseEntity listFollowing(@RequestParam(value = "user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,

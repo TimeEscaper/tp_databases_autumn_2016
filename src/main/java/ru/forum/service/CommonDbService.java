@@ -4,6 +4,7 @@ package ru.forum.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.DbStatus;
@@ -12,6 +13,7 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 
 @SuppressWarnings("unused")
+@Service
 public class CommonDbService  extends AbstractDbService{
 
     @Autowired

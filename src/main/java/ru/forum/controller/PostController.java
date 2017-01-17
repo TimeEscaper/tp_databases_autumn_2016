@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.*;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.Response;
@@ -63,30 +64,28 @@ public class PostController {
     }
 
     @RequestMapping(path = "/api/post/list/", method = RequestMethod.GET)
-    public ResponseEntity listThreadByUser(@RequestParam(value = "thread") int threadId,
+    public ResponseEntity listPosts(@RequestParam(value = "thread", required = false) int threadId,
+                                           @RequestParam(value = "forum", required = false) String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,
                                            @RequestParam(value = "since", required = false) String since) {
-        try {
-            final ArrayList<PostFull> list = postService.listPostsByThread(threadId, since, limit, order);
-            return ResponseEntity.ok(new Response<>(0, list));
-        } catch (DbException e) {
-            LOGGER.error("Unable to list posts by thread:", e);
-            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        if (forum == null) {
+            try {
+                final ArrayList<PostFull> list = postService.listPostsByThread(threadId, since, limit, order);
+                return ResponseEntity.ok(new Response<>(0, list));
+            } catch (DbException e) {
+                LOGGER.error("Unable to list posts by thread:", e);
+                return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+            }
         }
-    }
-
-    @RequestMapping(path = "/api/post/list/", method = RequestMethod.GET)
-    public ResponseEntity listThreadByForum(@RequestParam(value = "forum") String forum,
-                                            @RequestParam(value = "limit", required = false) Integer limit,
-                                            @RequestParam(value = "order", required = false) String order,
-                                            @RequestParam(value = "since", required = false) String since) {
-        try {
-            final ArrayList<PostFull> list = postService.listPostsByForum(forum, since, limit, order);
-            return ResponseEntity.ok(new Response<>(0, list));
-        } catch (DbException e) {
-            LOGGER.error("Unable to list posts by forum:", e);
-            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        else {
+            try {
+                final ArrayList<PostFull> list = postService.listPostsByForum(forum, since, limit, order);
+                return ResponseEntity.ok(new Response<>(0, list));
+            } catch (DbException e) {
+                LOGGER.error("Unable to list posts by forum:", e);
+                return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+            }
         }
     }
 
