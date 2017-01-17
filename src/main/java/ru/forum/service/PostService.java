@@ -294,7 +294,7 @@ public class PostService extends AbstractDbService {
 
     public PostDataSet updatePost(long postId, String message) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Post(message) SET('%s') WHERE id=%d;", message, postId);
+        formatter.format("UPDATE Post(message,isEdited) SET('%s',1) WHERE id=%d;", message, postId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;

@@ -89,10 +89,12 @@ public class ThreadService extends AbstractDbService {
         String postfix = " WHERE Thread.id = " + Long.toString(threadId);
         if (containsUser)
             postfix += " GROUP BY User.id";
+        if (containsUser && containsForum)
+            postfix += " ,Forum.id";
         postfix += ';';
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(*) AS posts ");
-        final StringBuilder joins = new StringBuilder("FROM Thread JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.id) AS posts ");
+        final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
 
         if (containsUser) {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -100,11 +102,11 @@ public class ThreadService extends AbstractDbService {
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
             joins.append(" JOIN User ON(Thread.user = User.email) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                    "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                    "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                     "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
         }
         if (containsForum) {
-            tables.append(" , forum.*");
+            tables.append(" , Forum.* ");
             joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
         }
 
@@ -115,9 +117,10 @@ public class ThreadService extends AbstractDbService {
                     resultSet -> {
                         if (!resultSet.next())
                             return null;
+                        System.out.println(resultSet.getString("Thread.date"));
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
-                                resultSet.getString("Thread.date"),
+                                resultSet.getString("Thread.date").substring(0, 19),
                                 resultSet.getString("Thread.title"),
                                 resultSet.getString("Thread.slug"),
                                 resultSet.getString("Thread.message"),
@@ -136,9 +139,9 @@ public class ThreadService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("User.followers"),
-                                    resultSet.getString("User.followees"),
-                                    resultSet.getString("User.subscriptions")
+                                    resultSet.getString("followers"),
+                                    resultSet.getString("followees"),
+                                    resultSet.getString("subscriptions")
                             ));
                         } else {
                             result.setUser(resultSet.getString("Thread.user"));
@@ -147,7 +150,7 @@ public class ThreadService extends AbstractDbService {
                             result.setForum(new ForumDataSet(
                                     resultSet.getLong("Forum.id"),
                                     resultSet.getString("Forum.name"),
-                                    resultSet.getString("Forum.shortName"),
+                                    resultSet.getString("Forum.short_name"),
                                     resultSet.getString("Forum.user")
                             ));
                         } else {

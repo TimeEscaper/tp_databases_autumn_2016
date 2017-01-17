@@ -1,5 +1,8 @@
 package ru.forum.model.full;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @SuppressWarnings("unused")
 public class PostFull {
 
@@ -99,18 +102,22 @@ public class PostFull {
         this.user = user;
     }
 
+    @JsonProperty("isHighlighted")
     public boolean isHighlighted() {
         return isHighlighted;
     }
 
+    @JsonProperty("isEdited")
     public boolean isEdited() {
         return isEdited;
     }
 
+    @JsonProperty("isSpam")
     public boolean isSpam() {
         return isSpam;
     }
 
+    @JsonProperty("isDeleted")
     public boolean isDeleted() {
         return isDeleted;
     }

@@ -1,6 +1,8 @@
 package ru.forum.model.full;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @SuppressWarnings("unused")
 public class ThreadFull {
     long id;
@@ -81,10 +83,12 @@ public class ThreadFull {
         return message;
     }
 
+    @JsonProperty("isClosed")
     public boolean isClosed() {
         return isClosed;
     }
 
+    @JsonProperty("isDeleted")
     public boolean isDeleted() { return isDeleted; }
 
     public long getLikes() { return likes; }

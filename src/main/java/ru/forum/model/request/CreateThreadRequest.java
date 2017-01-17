@@ -1,5 +1,8 @@
 package ru.forum.model.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ser.impl.IndexedStringListSerializer;
+
 public class CreateThreadRequest {
     private String forum;
     private String user;
@@ -7,8 +10,8 @@ public class CreateThreadRequest {
     private String title;
     private String slug;
     private String message;
-    private boolean isClosed;
-    private boolean isDeleted = false;
+    private Boolean isClosed;
+    private Boolean isDeleted;
 
     public String getForum() {
         return forum;
@@ -34,11 +37,25 @@ public class CreateThreadRequest {
         return message;
     }
 
-    public boolean isClosed() {
+    @JsonProperty("isClosed")
+    public Boolean isClosed() {
         return isClosed;
     }
 
-    public boolean isDeleted() {
+    @JsonProperty("isDeleted")
+    public Boolean isDeleted() {
         return isDeleted;
     }
+
+    @JsonProperty("isDeleted")
+    public void setIsDeleted(Boolean isDeleted) {
+        this.isDeleted = isDeleted == null ? false : isDeleted;
+    }
+
+    @JsonProperty("isClosed")
+    public void setIsClosed(Boolean isClosed) {
+        this.isClosed = isClosed == null ? false : isClosed;
+    }
+
+
 }
