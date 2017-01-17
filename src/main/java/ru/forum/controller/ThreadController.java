@@ -87,12 +87,12 @@ public class ThreadController {
     }
 
     @RequestMapping(path = "/api/thread/list/", method = RequestMethod.GET)
-    public ResponseEntity listThreadByForum(@RequestParam(value = "forum") String user,
+    public ResponseEntity listThreadByForum(@RequestParam(value = "forum") String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,
                                            @RequestParam(value = "since", required = false) String since) {
         try {
-            final ArrayList<ThreadDataSet> list = threadService.listThread(user, false, since, limit, order);
+            final ArrayList<ThreadDataSet> list = threadService.listThread(forum, false, since, limit, order);
             return ResponseEntity.ok(new Response<>(0, list));
         } catch (DbException e) {
             LOGGER.error("Unable to list threads:", e);
@@ -140,7 +140,7 @@ public class ThreadController {
                 return ResponseEntity.ok(new Response<>(0, request));
             return ResponseEntity.ok(new Response<>(1, "No such thread!"));
         } catch (DbException e) {
-            LOGGER.error("Unable to remove thread:", e);
+            LOGGER.error("Unable to restore thread:", e);
             return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
         }
     }
@@ -186,7 +186,7 @@ public class ThreadController {
     }
 
     @RequestMapping(path = "/api/thread/vote/", method = RequestMethod.POST)
-    public ResponseEntity voteThread(@RequestBody VoteRequest request) {
+    public ResponseEntity voteThread(@RequestBody VoteThreadRequest request) {
         try {
             final ThreadDataSet thread = threadService.voteThread(request.getThread(), request.getVote());
             if (thread == null)

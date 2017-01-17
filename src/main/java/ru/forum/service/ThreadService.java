@@ -349,22 +349,4 @@ public class ThreadService extends AbstractDbService {
 
     }
 
-    /*public ArrayList<PostFull> listPosts(long threadId, String since, Integer limit, String order, String sort)
-        throws DbException {
-
-        String postfix = " WHERE Post.thread = '" + Long.toString(threadId) + '\'';
-        if (since != null) {
-            postfix += " AND Post.date >= " + since;
-        }
-        if (order == null)
-            postfix += " ORDER BY Post.date desc";
-        else
-            postfix += "ORDER BY Post.date " + order;
-        if (limit != null)
-            postfix += " LIMIT " + limit.toString();
-        postfix += ";";
-
-
-    } */
-
 }

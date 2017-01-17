@@ -32,7 +32,7 @@ public class PostService extends AbstractDbService {
         }
     }
 
-    public PostDataSet createPost(String date, int thread, String message, String user, String forum, int parent,
+    public PostDataSet createPost(String date, long thread, String message, String user, String forum, long parent,
                                   boolean isApproved, boolean isHighlighted, boolean isEdited,
                                   boolean isSpam, boolean isDeleted) throws DbException {
         stringBuilder.setLength(0);
@@ -73,9 +73,9 @@ public class PostService extends AbstractDbService {
         }
     }
 
-    public PostFull postDetails(int postId, List<String> related) throws DbException {
+    public PostFull postDetails(long postId, List<String> related) throws DbException {
 
-        String postfix = " WHERE Post.id = " + Integer.toString(postId);
+        String postfix = " WHERE Post.id = " + Long.toString(postId);
         if (related.contains("user"))
             postfix += " GROUP BY User.id";
         postfix += ';';
@@ -227,7 +227,7 @@ public class PostService extends AbstractDbService {
     }
 
     public ArrayList<PostFull> listPostsByThread(int thread,
-                                                 String since, Integer limit, String order, ArrayList<String> related)
+                                                 String since, Integer limit, String order)
             throws DbException {
         String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
         if (since != null) {
@@ -278,7 +278,7 @@ public class PostService extends AbstractDbService {
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
-            throw new DbException("Unable to remove thread!", e);
+            throw new DbException("Unable to remove post!", e);
         }
     }
 
@@ -288,7 +288,7 @@ public class PostService extends AbstractDbService {
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
-            throw new DbException("Unable to restore thread!", e);
+            throw new DbException("Unable to restore post!", e);
         }
     }
 
@@ -328,7 +328,7 @@ public class PostService extends AbstractDbService {
         }
     }
 
-    public PostDataSet votePost(long postId, short vote) throws DbException {
+    public PostDataSet votePost(long postId, int vote) throws DbException {
         stringBuilder.setLength(0);
         if (vote == 1) {
             formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);

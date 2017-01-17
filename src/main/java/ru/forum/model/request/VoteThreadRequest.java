@@ -1,6 +1,6 @@
 package ru.forum.model.request;
 
-public class VoteRequest {
+public class VoteThreadRequest {
     private int vote;
     private long thread;
 
