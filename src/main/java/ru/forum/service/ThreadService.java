@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.dataset.ForumDataSet;
+import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
 import ru.forum.model.full.PostFull;
@@ -90,7 +91,7 @@ public class ThreadService extends AbstractDbService {
             postfix += " GROUP BY User.id";
         postfix += ';';
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.*) AS posts");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(*) AS posts ");
         final StringBuilder joins = new StringBuilder("FROM Thread JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
 
         if (containsUser) {
@@ -98,8 +99,6 @@ public class ThreadService extends AbstractDbService {
                     "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
             joins.append(" JOIN User ON(Thread.user = User.email) " +
-                    "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
-                    "AND User.email = UserFollowers.followee) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                     "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
                     "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
@@ -110,11 +109,11 @@ public class ThreadService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        if (resultSet.next())
+                        if (!resultSet.next())
                             return null;
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
@@ -348,5 +347,20 @@ public class ThreadService extends AbstractDbService {
         }
 
     }
+
+    /*public ArrayList<PostDataSet> listPosts(long threadId, String since, Integer limit, String order, String sort)
+        throws DbException {
+
+        String query = "SELECT * FORM Post WHERE thread = " + Long.toString(threadId);
+        if (since != null)
+            query += " AND date >= " + since;
+        if (sort == null)
+            sort = "flat";
+        if (sort.equals("flat"))
+            query += " ORDER BY date " + ((order == null) ? "DESC" : sort);
+
+
+
+    } */
 
 }

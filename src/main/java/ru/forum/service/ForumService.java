@@ -79,12 +79,12 @@ public class ForumService extends AbstractDbService {
 
     public ForumFull forumDetails(String forum, String user) throws DbException {
 
-        String postfix = " WHERE Forum.short_name = " + forum;
+        String postfix = " WHERE Forum.short_name = '" + forum + "\'";
         if (user != null)
-            postfix += " GROUP BY User.id";
+            postfix += " GROUP BY User.id, Forum.id";
         postfix += ';';
 
-        final StringBuilder tables = new StringBuilder("SELECT Forum.*");
+        final StringBuilder tables = new StringBuilder("SELECT Forum.* ");
         final StringBuilder joins = new StringBuilder("FROM Forum");
 
         if (user != null) {
@@ -92,19 +92,18 @@ public class ForumService extends AbstractDbService {
                     "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                     "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
             joins.append(" JOIN User ON(Forum.user = User.email) " +
-                    "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
-                    "AND User.email = UserFollowers.followee) " +
                     "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                    "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                    "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                     "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
         }
 
         final String query = tables.toString() + joins + postfix;
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
                         resultSet.next();
+                        System.out.println(resultSet.getString("Forum.name"));
                         final ForumFull result = new ForumFull(
                                 resultSet.getLong("Forum.id"),
                                 resultSet.getString("Forum.name"),
@@ -119,9 +118,9 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("User.followers"),
-                                    resultSet.getString("User.followees"),
-                                    resultSet.getString("User.subscriptions")
+                                    resultSet.getString("followers"),
+                                    resultSet.getString("followees"),
+                                    resultSet.getString("subscriptions")
                             ));
                         } else {
                             result.setUser(resultSet.getString("Forum.user"));
@@ -129,6 +128,7 @@ public class ForumService extends AbstractDbService {
                         return result;
                     });
         } catch (SQLException e) {
+            System.out.println(query);
             throw new DbException("Unable to get forum or related data!", e);
         }
 

@@ -28,7 +28,7 @@ public class ThreadController {
         this.threadService = threadService;
     }
 
-    @RequestMapping(path = "/api/thread/close/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/close/", method = RequestMethod.POST)
     public ResponseEntity closeThread(@RequestBody ThreadRequest request) {
         try {
             if (threadService.closeThread(request.getThread()))
@@ -40,7 +40,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/create/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/create/", method = RequestMethod.POST)
     public ResponseEntity createThread(@RequestBody CreateThreadRequest request) {
         try {
             final ThreadDataSet thread = threadService.createThread(request.getForum(), request.getTitle(),
@@ -55,12 +55,13 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/details/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/thread/details/", method = RequestMethod.GET)
     public ResponseEntity threadDetails(@RequestParam(value = "thread") int threadId,
-                                        @RequestParam(value = "related[]", required = false) String[] related) {
+                                        @RequestParam(value = "related", required = false) String[] related) {
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
+        System.out.println(relatedList.size());
         try {
             final ThreadFull thread = threadService.threadDetails(threadId, relatedList);
             if (thread == null)
@@ -72,7 +73,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/list/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/thread/list/", method = RequestMethod.GET)
     public ResponseEntity listThread(@RequestParam(value = "user") String user,
                                            @RequestParam(value = "forum") String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
@@ -98,7 +99,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/listPosts/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/thread/listPosts/", method = RequestMethod.GET)
     public ResponseEntity listPosts(@RequestParam(value = "thread") int threadId,
                                     @RequestParam(value = "sort") String sort,
                                     @RequestParam(value = "limit", required = false) Integer limit,
@@ -107,7 +108,7 @@ public class ThreadController {
         return ResponseEntity.ok(new Response<>(0, "Ok!"));
     }
 
-    @RequestMapping(path = "/api/thread/open/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/open/", method = RequestMethod.POST)
     public ResponseEntity openThread(@RequestBody ThreadRequest request) {
         try {
             if (threadService.openThread(request.getThread()))
@@ -119,7 +120,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/remove/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/remove/", method = RequestMethod.POST)
     public ResponseEntity removeThread(@RequestBody ThreadRequest request) {
         try {
             if (threadService.removeThread(request.getThread()))
@@ -131,7 +132,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/restore/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/restore/", method = RequestMethod.POST)
     public ResponseEntity restoreThread(@RequestBody ThreadRequest request) {
         try {
             if (threadService.restoreThread(request.getThread()))
@@ -143,7 +144,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/update/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/update/", method = RequestMethod.POST)
     public ResponseEntity updateThread(@RequestBody UpdateThreadRequest request) {
         try {
             final ThreadDataSet thread = threadService.updateThread(request.getThread(), request.getSlug(), request.getMessage());
@@ -157,7 +158,7 @@ public class ThreadController {
     }
 
     //TODO: change to boolean
-    @RequestMapping(path = "/api/thread/subscribe/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/subscribe/", method = RequestMethod.POST)
     public ResponseEntity subscribeThread(@RequestBody SubscribeRequest request) {
         try {
             final SubscriptionDataSet subs = threadService.subscribeThread(request.getUser(), request.getThread());
@@ -170,7 +171,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/unsubscribe/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/unsubscribe/", method = RequestMethod.POST)
     public ResponseEntity unsubscribeThread(@RequestBody SubscribeRequest request) {
         try {
             final SubscriptionDataSet subs = threadService.subscribeThread(request.getUser(), request.getThread());
@@ -183,7 +184,7 @@ public class ThreadController {
         }
     }
 
-    @RequestMapping(path = "/api/thread/vote/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/thread/vote/", method = RequestMethod.POST)
     public ResponseEntity voteThread(@RequestBody VoteThreadRequest request) {
         try {
             final ThreadDataSet thread = threadService.voteThread(request.getThread(), request.getVote());

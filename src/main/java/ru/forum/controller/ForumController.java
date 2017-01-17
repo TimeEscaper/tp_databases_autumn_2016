@@ -30,7 +30,7 @@ public class ForumController {
         this.forumService = forumService;
     }
 
-    @RequestMapping(path = "/api/forum/create", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/forum/create/", method = RequestMethod.POST, consumes = "application/json;charset=UTF-8")
     public ResponseEntity createForum(@RequestBody CreateForumRequest request) {
         try {
             final ForumDataSet forum = forumService.createForum(request.getName(), request.getShortName(), request.getUser());
@@ -43,9 +43,10 @@ public class ForumController {
         }
     }
 
-    @RequestMapping(path = "/api/forum/details/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/forum/details/", method = RequestMethod.GET)
     public ResponseEntity forumDetails(@RequestParam(value = "forum") String shortName,
-                                       @RequestParam(value = "related", required = false) String user) {
+                                       @RequestParam(value = "related", required = false) String related) {
+        final String user = related == null ? null : related;
         try {
             final ForumFull forum = forumService.forumDetails(shortName, user);
             if (forum == null)
@@ -57,7 +58,7 @@ public class ForumController {
         }
     }
 
-    @RequestMapping(path = "/api/forum/listPosts/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/forum/listPosts/", method = RequestMethod.GET)
     public ResponseEntity listPosts(@RequestParam(value = "forum") String shortName,
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false) String order,
@@ -75,7 +76,7 @@ public class ForumController {
         }
     }
 
-    @RequestMapping(path = "/api/forum/listThreads/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/forum/listThreads/", method = RequestMethod.GET)
     public ResponseEntity listThreads(@RequestParam(value = "forum") String shortName,
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false) String order,
@@ -93,7 +94,7 @@ public class ForumController {
         }
     }
 
-    @RequestMapping(path = "/api/forum/listUsers/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/forum/listUsers/", method = RequestMethod.GET)
     public ResponseEntity listUsers(@RequestParam(value = "forum") String shortName,
                                       @RequestParam(value = "limit", required = false) Integer limit,
                                       @RequestParam(value = "order", required = false) String order,

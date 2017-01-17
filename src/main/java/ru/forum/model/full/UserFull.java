@@ -1,5 +1,10 @@
 package ru.forum.model.full;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.mysql.jdbc.StringUtils;
+import org.eclipse.jetty.util.StringUtil;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +26,9 @@ public class UserFull {
                     String followers, String following, String subscriptions) {
         this.id = id;
         this.email = email;
-        this.username = username;
-        this.about = about;
-        this.name = name;
+        this.username = username.equals("null") ? null : username;
+        this.about = about.equals("null") ? null : about;
+        this.name = name.equals("null") ? null : name;
         this.isAnonymous = isAnonymous;
         if (followers != null) {
             final String[] followersSplit = followers.split(",");
@@ -60,6 +65,7 @@ public class UserFull {
         return name;
     }
 
+    @JsonProperty("isAnonymous")
     public boolean isAnonymous() {
         return isAnonymous;
     }

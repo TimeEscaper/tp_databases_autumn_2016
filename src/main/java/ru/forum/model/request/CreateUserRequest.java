@@ -1,30 +1,14 @@
 package ru.forum.model.request;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class CreateUserRequest {
     String username;
     String about;
     String name;
     String email;
-    boolean isAnonymous = false;
-
-    public CreateUserRequest() { }
-
-    public CreateUserRequest(String username, String about, String name, String email) {
-        this.username = username;
-        this.about = about;
-        this.name = name;
-        this.email = email;
-        this.isAnonymous = false;
-    }
-
-    public CreateUserRequest(String username, String about, String name, String email, boolean isAnonymous) {
-        this.username = username;
-        this.about = about;
-        this.name = name;
-        this.email = email;
-        this.isAnonymous = isAnonymous;
-    }
+    Boolean isAnonymous;
 
     public String getUsername() {
         return username;
@@ -42,7 +26,13 @@ public class CreateUserRequest {
         return email;
     }
 
+    @JsonProperty("isAnonymous")
     public boolean isAnonymous() {
         return isAnonymous;
+    }
+
+    @JsonProperty("isAnonymous")
+    public void setIsAnonymous(Boolean isAnonymous) {
+        this.isAnonymous = (isAnonymous == null) ? false : isAnonymous;
     }
 }

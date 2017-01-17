@@ -22,7 +22,7 @@ public class CommonController {
     @Autowired
     public CommonController(CommonDbService commonDbService) { this.commonDbService = commonDbService; }
 
-    @RequestMapping(path = "/api/clear/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/clear/", method = RequestMethod.POST)
     public ResponseEntity clearDatabase() {
         try {
             commonDbService.truncateAll();
@@ -33,7 +33,7 @@ public class CommonController {
         }
     }
 
-    @RequestMapping(path = "/api/status/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/status/", method = RequestMethod.GET)
     public ResponseEntity getStatus() {
         try {
             final DbStatus dbStatus = commonDbService.getStatus();

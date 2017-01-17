@@ -30,7 +30,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @RequestMapping(path = "/api/user/create/", method = RequestMethod.POST, consumes = "application/json")
+    @RequestMapping(path = "/db/api/user/create/", method = RequestMethod.POST, consumes = "application/json")
     public ResponseEntity createUser(@RequestBody CreateUserRequest request) {
         try {
             final UserDataSet user = userService.createUser(request.getUsername(), request.getAbout(), request.getName(),
@@ -44,7 +44,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/details/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/user/details/", method = RequestMethod.GET)
     public ResponseEntity userDetails(@RequestParam(value = "user") String email) {
         try {
             final UserFull user = userService.getUserDetails(email);
@@ -57,7 +57,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/follow/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/user/follow/", method = RequestMethod.POST)
     public ResponseEntity followUser(@RequestBody FollowUserRequest request) {
         try {
             final UserFull user = userService.followUser(request.getFollower(), request.getFollowee());
@@ -70,7 +70,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/unfollow/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/user/unfollow/", method = RequestMethod.POST)
     public ResponseEntity unfollowUser(@RequestBody FollowUserRequest request) {
         try {
             final UserFull user = userService.unfollowUser(request.getFollower(), request.getFollowee());
@@ -83,7 +83,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/listFollowers/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/user/listFollowers/", method = RequestMethod.GET)
     public ResponseEntity listFollowers(@RequestParam(value = "user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
@@ -97,7 +97,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/listFollowing/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/user/listFollowing/", method = RequestMethod.GET)
     public ResponseEntity listFollowing(@RequestParam(value = "user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
@@ -111,7 +111,7 @@ public class UserController {
         }
     }
 
-    @RequestMapping(path = "/api/user/listPosts/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/user/listPosts/", method = RequestMethod.GET)
     public ResponseEntity listFollowing(@RequestParam(value = "user") String email,
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
@@ -126,7 +126,7 @@ public class UserController {
     }
 
 
-    @RequestMapping(path = "/api/user/updateProfile/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/user/updateProfile/", method = RequestMethod.POST)
     public ResponseEntity updateUser(@RequestBody UpdateUserRequest request) {
         try {
             final UserFull user = userService.updateUser(request.getUser(), request.getAbout(), request.getName());

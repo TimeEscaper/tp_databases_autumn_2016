@@ -29,7 +29,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    @RequestMapping(path = "/api/post/create/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/post/create/", method = RequestMethod.POST)
     public ResponseEntity createPost(@RequestBody CreatePostRequest request) {
         try {
             final PostDataSet post = postService.createPost(request.getDate(), request.getThread(), request.getMessage(),
@@ -46,7 +46,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/details/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/post/details/", method = RequestMethod.GET)
     public ResponseEntity threadDetails(@RequestParam(value = "post") int postId,
                                         @RequestParam(value = "related[]", required = false) String[] related) {
         final ArrayList<String> relatedList = new ArrayList<>();
@@ -63,7 +63,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/list/", method = RequestMethod.GET)
+    @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
     public ResponseEntity listPosts(@RequestParam(value = "thread", required = false) int threadId,
                                            @RequestParam(value = "forum", required = false) String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
@@ -89,7 +89,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/remove/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/post/remove/", method = RequestMethod.POST)
     public ResponseEntity removeThread(@RequestBody PostRequest request) {
         try {
             if (postService.removePost(request.getPost()))
@@ -101,7 +101,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/restore/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/post/restore/", method = RequestMethod.POST)
     public ResponseEntity restoreThread(@RequestBody PostRequest request) {
         try {
             if (postService.restorePost(request.getPost()))
@@ -113,7 +113,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/update/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/post/update/", method = RequestMethod.POST)
     public ResponseEntity updateThread(@RequestBody UpdatePostRequest request) {
         try {
             final PostDataSet post = postService.updatePost(request.getPost(), request.getMessage());
@@ -126,7 +126,7 @@ public class PostController {
         }
     }
 
-    @RequestMapping(path = "/api/post/vote/", method = RequestMethod.POST)
+    @RequestMapping(path = "/db/api/post/vote/", method = RequestMethod.POST)
     public ResponseEntity voteThread(@RequestBody VotePostRequest request) {
         try {
             final PostDataSet post = postService.votePost(request.getPost(), request.getVote());
