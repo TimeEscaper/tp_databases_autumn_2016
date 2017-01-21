@@ -1,5 +1,7 @@
 package ru.forum.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @SuppressWarnings("unused")
 public class ThreadDataSet {
 
@@ -22,7 +24,7 @@ public class ThreadDataSet {
         this.id = id;
         this.forum = forum;
         this.user = user;
-        this.date = date;
+        this.date = date.substring(0, 19);
         this.title = title;
         this.slug = slug;
         this.message = message;
@@ -35,7 +37,7 @@ public class ThreadDataSet {
         this.id = id;
         this.forum = forum;
         this.user = user;
-        this.date = date;
+        this.date = date.substring(0, 19);
         this.title = title;
         this.slug = slug;
         this.message = message;
@@ -73,13 +75,13 @@ public class ThreadDataSet {
         return message;
     }
 
+    @JsonProperty("isClosed")
     public boolean isClosed() {
         return isClosed;
     }
 
-    public boolean isDeleted() {
-        return isDeleted;
-    }
+    @JsonProperty("isDeleted")
+    public boolean isDeleted() { return isDeleted; }
 
     public long getLikes() { return likes; }
 

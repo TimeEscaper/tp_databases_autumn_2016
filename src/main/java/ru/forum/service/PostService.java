@@ -2,6 +2,7 @@ package ru.forum.service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.parsing.NullSourceExtractor;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
@@ -32,14 +33,20 @@ public class PostService extends AbstractDbService {
         }
     }
 
-    public PostDataSet createPost(String date, long thread, String message, String user, String forum, long parent,
-                                  boolean isApproved, boolean isHighlighted, boolean isEdited,
-                                  boolean isSpam, boolean isDeleted) throws DbException {
+    public PostDataSet createPost(String date, long thread, String message, String user, String forum, Long parent,
+                                  Boolean isApproved, Boolean isHighlighted, Boolean isEdited,
+                                  Boolean isSpam, Boolean isDeleted) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("INSERT INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited,+" +
-                        "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d.%d.%d.%d);",
+        if (parent != null)
+            formatter.format("INSERT IGNORE INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited," +
+                        "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d,%d,%d,%d);",
                 thread, forum, user, message, date, parent, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
                 isSpam ? 1 : 0, isDeleted ? 1 : 0);
+        else
+            formatter.format("INSERT IGNORE INTO Post(thread,forum,user,message,date,isApproved,isHighlighted,isEdited," +
+                            "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d,%d,%d);",
+                    thread, forum, user, message, date, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
+                    isSpam ? 1 : 0, isDeleted ? 1 : 0);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;
@@ -78,42 +85,43 @@ public class PostService extends AbstractDbService {
         String postfix = " WHERE Post.id = " + Long.toString(postId);
         if (related.contains("user"))
             postfix += " GROUP BY User.id";
+        if (related.contains("user") && related.contains("forum"))
+            postfix += ",Forum.id";
         postfix += ';';
 
         final StringBuilder tables = new StringBuilder("SELECT Post.*");
-        final StringBuilder joins = new StringBuilder("FROM Post");
+        final StringBuilder joins = new StringBuilder(" FROM Post");
 
         for (String table : related) {
             switch (table) {
                 case "forum":
-                    tables.append(" , forum.*");
+                    tables.append(" , Forum.*");
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(Tpost.*) AS posts");
+                    tables.append(" , Thread.*, COUNT(Tpost.id) AS posts");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
-                            "JOIN Post AS Tpost ON(Thread.id=Tpost.thread) ");
+                            "  LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
                     break;
                 case "user":
                     tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                             "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                             "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                     joins.append(" JOIN User ON(Post.user = User.email) " +
-                            "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
-                            "AND User.email = UserFollowers.followee) " +
                             "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                            "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                            "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                             "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
                     break;
             }
         }
 
         final String query = tables.toString() + joins + postfix;
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        resultSet.next();
+                        if (!resultSet.next())
+                            return null;
                         final PostFull post = new PostFull(
                                 resultSet.getLong("Post.id"),
                                 resultSet.getString("Post.message"),
@@ -136,9 +144,9 @@ public class PostService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("User.followers"),
-                                    resultSet.getString("User.followees"),
-                                    resultSet.getString("User.subscriptions")
+                                    resultSet.getString("followers"),
+                                    resultSet.getString("followees"),
+                                    resultSet.getString("subscriptions")
                             ));
                         } else {
                             post.setUser(resultSet.getString("Post.user"));
@@ -147,7 +155,7 @@ public class PostService extends AbstractDbService {
                             post.setForum(new ForumDataSet(
                                     resultSet.getLong("Forum.id"),
                                     resultSet.getString("Forum.name"),
-                                    resultSet.getString("Forum.shortName"),
+                                    resultSet.getString("Forum.short_name"),
                                     resultSet.getString("Forum.user")
                             ));
                         } else {
@@ -169,7 +177,7 @@ public class PostService extends AbstractDbService {
                                     resultSet.getLong("posts")
                             ));
                         } else {
-                            post.setThread(resultSet.getString("Post.thread"));
+                            post.setThread(resultSet.getLong("Post.thread"));
                         }
 
                         return post;
@@ -185,16 +193,16 @@ public class PostService extends AbstractDbService {
             throws DbException {
         String query = "SELECT * FROM Post WHERE forum = '" + forum + '\'';
         if (since != null) {
-            query += " AND date >= " + since;
+            query += " AND date >= '" + since + "\'";
         }
         if (order == null)
             query += " ORDER BY date desc";
         else
-            query += "ORDER BY date " + order;
+            query += " ORDER BY date " + order;
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ";";
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -202,7 +210,7 @@ public class PostService extends AbstractDbService {
                         while (resultSet.next()) {
                             final PostFull post = new PostFull(
                                     resultSet.getLong("id"),
-                                    resultSet.getString("thread"),
+                                    resultSet.getLong("thread"),
                                     resultSet.getString("forum"),
                                     resultSet.getString("user"),
                                     resultSet.getString("message"),
@@ -231,7 +239,7 @@ public class PostService extends AbstractDbService {
             throws DbException {
         String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
         if (since != null) {
-            query += " AND date >= " + since;
+            query += " AND date >= '" + since + "\'";
         }
         if (order == null)
             query += " ORDER BY date desc";
@@ -248,7 +256,7 @@ public class PostService extends AbstractDbService {
                         while (resultSet.next()) {
                             final PostFull post = new PostFull(
                                     resultSet.getLong("id"),
-                                    resultSet.getString("thread"),
+                                    resultSet.getLong("thread"),
                                     resultSet.getString("forum"),
                                     resultSet.getString("user"),
                                     resultSet.getString("message"),
@@ -274,7 +282,8 @@ public class PostService extends AbstractDbService {
 
     public boolean removePost(long postId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Post (isDeleted) SET (1) WHERE id = %d;", postId);
+        formatter.format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
+        System.out.println(formatter.toString());
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -284,7 +293,7 @@ public class PostService extends AbstractDbService {
 
     public boolean restorePost(long postId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Post (isDeleted) SET (0) WHERE id = %d;", postId);
+        formatter.format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -294,7 +303,7 @@ public class PostService extends AbstractDbService {
 
     public PostDataSet updatePost(long postId, String message) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE Post(message,isEdited) SET('%s',1) WHERE id=%d;", message, postId);
+        formatter.format("UPDATE IGNORE Post SET message='%s' WHERE id=%d;", message, postId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;
@@ -331,11 +340,12 @@ public class PostService extends AbstractDbService {
     public PostDataSet votePost(long postId, int vote) throws DbException {
         stringBuilder.setLength(0);
         if (vote == 1) {
-            formatter.format("UPDATE Thread SET likes = likes + 1 WHERE id = %d;", postId);
+            formatter.format("UPDATE IGNORE Post SET likes = likes + 1 WHERE id = %d;", postId);
         } else if (vote == -1) {
-            formatter.format("UPDATE Thread SET dislikes = dislikes + 1 WHERE id = %d;", postId);
+            formatter.format("UPDATE IGNORE Post SET dislikes = dislikes + 1 WHERE id = %d;", postId);
         } else
             return null;
+        System.out.println(formatter.toString());
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;

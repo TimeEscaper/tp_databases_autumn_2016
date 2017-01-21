@@ -36,38 +36,38 @@ public class CreatePostRequest {
     }
 
     @JsonProperty("parent")
-    public long getParent() {
+    public Long getParent() {
         return parent;
     }
 
     @JsonProperty("isApproved")
-    public boolean isApproved() {
+    public Boolean isApproved() {
         return isApproved;
     }
 
     @JsonProperty("isHighlighted")
-    public boolean isHighlighted() {
+    public Boolean isHighlighted() {
         return isHighlighted;
     }
 
     @JsonProperty("isEdited")
-    public boolean isEdited() {
+    public Boolean isEdited() {
         return isEdited;
     }
 
     @JsonProperty("isSpam")
-    public boolean isSpam() {
+    public Boolean isSpam() {
         return isSpam;
     }
 
     @JsonProperty("isDeleted")
-    public boolean isDeleted() {
+    public Boolean isDeleted() {
         return isDeleted;
     }
 
     @JsonProperty("parent")
     public void setParent(Long parent) {
-        this.parent = parent == null ? 0 : parent;
+        this.parent = parent;
     }
 
     @JsonProperty("isApproved")

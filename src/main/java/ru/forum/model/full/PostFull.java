@@ -12,7 +12,7 @@ public class PostFull {
     private Object user;
     private String message;
     private String date;
-    private long parent;
+    private Long parent;
     private boolean isApproved;
     private boolean isHighlighted;
     private boolean isEdited;
@@ -22,7 +22,7 @@ public class PostFull {
     private long dislikes;
     private long points;
 
-    public PostFull(long id, Object thread, Object forum, Object user, String message, String date, long parent,
+    public PostFull(long id, Object thread, Object forum, Object user, String message, String date, Long parent,
                     boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
                     long likes, long dislikes) {
         this.id = id;
@@ -30,8 +30,8 @@ public class PostFull {
         this.forum = forum;
         this.user = user;
         this.message = message;
-        this.date = date;
-        this.parent = parent;
+        this.date = date.substring(0, 19);
+        this.parent = parent == 0 ? null : parent;
         this.isApproved = isApproved;
         this.isHighlighted = isHighlighted;
         this.isEdited = isEdited;
@@ -42,12 +42,12 @@ public class PostFull {
         this.points = likes - dislikes;
     }
 
-    public PostFull(long id, String message, String date, long parent, boolean isApproved, boolean isHighlighted,
+    public PostFull(long id, String message, String date, Long parent, boolean isApproved, boolean isHighlighted,
                     boolean isEdited, boolean isSpam, boolean isDeleted, long likes, long dislikes) {
         this.id = id;
         this.message = message;
-        this.date = date;
-        this.parent = parent;
+        this.date = date.substring(0, 19);
+        this.parent = parent == 0 ? null : parent;
         this.isApproved = isApproved;
         this.isHighlighted = isHighlighted;
         this.isEdited = isEdited;
@@ -82,10 +82,11 @@ public class PostFull {
         return date;
     }
 
-    public long getParent() {
+    public Long getParent() {
         return parent;
     }
 
+    @JsonProperty("isApproved")
     public boolean isApproved() {
         return isApproved;
     }

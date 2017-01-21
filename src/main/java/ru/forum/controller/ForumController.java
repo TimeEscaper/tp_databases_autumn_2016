@@ -63,7 +63,7 @@ public class ForumController {
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since,
-                                    @RequestParam(value = "related[]", required = false) String[] related) {
+                                    @RequestParam(value = "related", required = false) String[] related) {
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -81,7 +81,7 @@ public class ForumController {
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since,
-                                    @RequestParam(value = "related[]", required = false) String[] related) {
+                                    @RequestParam(value = "related", required = false) String[] related) {
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -98,7 +98,7 @@ public class ForumController {
     public ResponseEntity listUsers(@RequestParam(value = "forum") String shortName,
                                       @RequestParam(value = "limit", required = false) Integer limit,
                                       @RequestParam(value = "order", required = false) String order,
-                                      @RequestParam(value = "since", required = false) String since) {
+                                      @RequestParam(value = "since_id", required = false) Integer since) {
         try {
             final List<UserFull> list = forumService.listUsers(shortName, since, limit, order);
             return ResponseEntity.ok(new Response<>(0, list));

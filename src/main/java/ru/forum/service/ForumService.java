@@ -141,10 +141,16 @@ public class ForumService extends AbstractDbService {
             throws DbException {
         String postfix = " WHERE Post.forum = '" + forum + '\'';
         if (since != null) {
-            postfix += " AND Post.date >= " + since;
+            postfix += " AND Post.date >= '" + since + "\' ";
         }
+        postfix += " GROUP BY ";
         if (related.contains("user"))
-            postfix += " GROUP BY User.id ";
+            postfix += "User.id,";
+        if (related.contains("thread"))
+            postfix += "Thread.id,";
+        if (related.contains("forum"))
+            postfix += "Forum.id,";
+        postfix += "Post.id ";
         if (order == null)
             postfix += " ORDER BY Post.date desc";
         else
@@ -154,35 +160,33 @@ public class ForumService extends AbstractDbService {
         postfix += ";";
 
         final StringBuilder tables = new StringBuilder("SELECT Post.*");
-        final StringBuilder joins = new StringBuilder("FROM Post");
+        final StringBuilder joins = new StringBuilder(" FROM Post ");
 
         for (String table : related) {
             switch (table) {
                 case "forum":
-                    tables.append(" , forum.*");
-                    joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
+                    tables.append(" , Forum.*");
+                    joins.append(" JOIN Forum ON(Post.forum = Forum.short_name) ");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(Tpost.*) AS posts");
+                    tables.append(" , Thread.*, COUNT(Tpost.id) AS posts");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
-                            "JOIN Post AS Tpost ON(Thread.id=TPost.thread) ");
+                            "LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
                     break;
                 case "user":
                     tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                             "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                             "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                     joins.append(" JOIN User ON(Post.user = User.email) " +
-                            "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
-                            "AND User.email = UserFollowers.followee) " +
                             "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                            "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                            "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                             "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
                     break;
             }
         }
 
         final String query = tables.toString() + joins + postfix;
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -210,9 +214,9 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.about"),
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous"),
-                                        resultSet.getString("User.followers"),
-                                        resultSet.getString("User.followees"),
-                                        resultSet.getString("User.subscriptions")
+                                        resultSet.getString("followers"),
+                                        resultSet.getString("followees"),
+                                        resultSet.getString("subscriptions")
                                 ));
                             } else {
                                 post.setUser(resultSet.getString("Post.user"));
@@ -221,7 +225,7 @@ public class ForumService extends AbstractDbService {
                                 post.setForum(new ForumDataSet(
                                         resultSet.getLong("Forum.id"),
                                         resultSet.getString("Forum.name"),
-                                        resultSet.getString("Forum.shortName"),
+                                        resultSet.getString("Forum.short_name"),
                                         resultSet.getString("Forum.user")
                                 ));
                             } else {
@@ -243,7 +247,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getLong("posts")
                                 ));
                             } else {
-                                post.setThread(resultSet.getString("Post.thread"));
+                                post.setThread(resultSet.getLong("Post.thread"));
                             }
 
                             result.add(post);
@@ -262,10 +266,14 @@ public class ForumService extends AbstractDbService {
 
         String postfix = " WHERE Thread.forum = '" + forum + '\'';
         if (since != null) {
-            postfix += " AND Thread.date >= " + since;
+            postfix += " AND Thread.date >= '" + since + "\' ";
         }
+        postfix += " GROUP BY ";
         if (related.contains("user"))
-            postfix += " GROUP BY User.id ";
+            postfix += "User.id,";
+        if (related.contains("forum"))
+            postfix += "Forum.id,";
+        postfix += "Thread.id ";
         if (order == null)
             postfix += " ORDER BY Thread.date desc";
         else
@@ -275,35 +283,33 @@ public class ForumService extends AbstractDbService {
         postfix += ";";
 
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.*) AS posts");
-        final StringBuilder joins = new StringBuilder("FROM Thread JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.id) AS posts ");
+        final StringBuilder joins = new StringBuilder(" FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
 
         for (String table : related) {
             if (table.equals("forum")) {
-                tables.append(" , forum.*");
+                tables.append(" , Forum.*");
                 joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
             } else if (table.equals("user")) {
                 tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                         "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                         "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
                 joins.append(" JOIN User ON(Thread.user = User.email) " +
-                        "JOIN Follow AS UserFollowees ON (UserFollowers.following = '%s' " +
-                        "AND User.email = UserFollowers.followee) " +
                         "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                        "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                        "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                         "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
             }
         }
 
         final String query = tables.toString() + joins + postfix;
-
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
                         final ArrayList<ThreadFull> result = new ArrayList<>();
                         while (resultSet.next()) {
                             final ThreadFull thread = new ThreadFull(
-                                    resultSet.getLong("Thred.id"),
+                                    resultSet.getLong("Thread.id"),
                                     resultSet.getString("Thread.date"),
                                     resultSet.getString("Thread.title"),
                                     resultSet.getString("Thread.slug"),
@@ -323,22 +329,22 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getString("User.about"),
                                         resultSet.getString("User.name"),
                                         resultSet.getBoolean("User.isAnonymous"),
-                                        resultSet.getString("User.followers"),
-                                        resultSet.getString("User.followees"),
-                                        resultSet.getString("User.subscriptions")
+                                        resultSet.getString("followers"),
+                                        resultSet.getString("followees"),
+                                        resultSet.getString("subscriptions")
                                 ));
                             } else {
-                                thread.setUser(resultSet.getString("Post.user"));
+                                thread.setUser(resultSet.getString("Thread.user"));
                             }
                             if (related.contains("forum")) {
                                 thread.setForum(new ForumDataSet(
                                         resultSet.getLong("Forum.id"),
                                         resultSet.getString("Forum.name"),
-                                        resultSet.getString("Forum.shortName"),
+                                        resultSet.getString("Forum.short_name"),
                                         resultSet.getString("Forum.user")
                                 ));
                             } else {
-                                thread.setForum(resultSet.getString("Post.forum"));
+                                thread.setForum(resultSet.getString("Thread.forum"));
                             }
 
                             result.add(thread);
@@ -351,11 +357,11 @@ public class ForumService extends AbstractDbService {
         }
     }
 
-    public ArrayList<UserFull> listUsers(String forum, String since, Integer limit, String order) throws DbException {
-        String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = " + forum;
+    public ArrayList<UserFull> listUsers(String forum, Integer since, Integer limit, String order) throws DbException {
+        String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = '" + forum + "\')";
         if (since != null)
-            postfix += " AND Post.date >= " + since;
-        postfix += ") GROUP BY User.id ";
+            postfix += " AND User.id >= " + since;
+        postfix += " GROUP BY User.id ";
 
         if (order == null)
             postfix += " ORDER BY User.name desc";
@@ -371,7 +377,7 @@ public class ForumService extends AbstractDbService {
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " + postfix;
 
         try {
@@ -386,9 +392,9 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getString("User.about"),
                                     resultSet.getString("User.name"),
                                     resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("User.followers"),
-                                    resultSet.getString("User.followees"),
-                                    resultSet.getString("User.subscriptions")));
+                                    resultSet.getString("followers"),
+                                    resultSet.getString("followees"),
+                                    resultSet.getString("subscriptions")));
                         }
 
                         return result;

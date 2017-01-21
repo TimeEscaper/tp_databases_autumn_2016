@@ -36,7 +36,7 @@ public class UserFull {
         }
         if (following != null) {
             final String[] followingSplit = following.split(",");
-            Collections.addAll(this.followers, followingSplit);
+            Collections.addAll(this.following, followingSplit);
         }
         if (subscriptions != null) {
             final String[] split = subscriptions.split(",");

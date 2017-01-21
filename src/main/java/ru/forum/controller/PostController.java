@@ -19,6 +19,7 @@ import ru.forum.service.PostService;
 import java.util.ArrayList;
 import java.util.Collections;
 
+@SuppressWarnings("Duplicates")
 @RestController
 public class PostController {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostController.class);
@@ -48,7 +49,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/details/", method = RequestMethod.GET)
     public ResponseEntity threadDetails(@RequestParam(value = "post") int postId,
-                                        @RequestParam(value = "related[]", required = false) String[] related) {
+                                        @RequestParam(value = "related", required = false) String[] related) {
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -64,7 +65,7 @@ public class PostController {
     }
 
     @RequestMapping(path = "/db/api/post/list/", method = RequestMethod.GET)
-    public ResponseEntity listPosts(@RequestParam(value = "thread", required = false) int threadId,
+    public ResponseEntity listPosts(@RequestParam(value = "thread", required = false) Integer threadId,
                                            @RequestParam(value = "forum", required = false) String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,

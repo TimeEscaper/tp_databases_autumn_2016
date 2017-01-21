@@ -1,5 +1,7 @@
 package ru.forum.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @SuppressWarnings("unused")
 public class PostDataSet {
 
@@ -9,7 +11,7 @@ public class PostDataSet {
     private String user;
     private String message;
     private String date;
-    private long parent;
+    private Long parent;
     private boolean isApproved;
     private boolean isHighlighted;
     private boolean isEdited;
@@ -19,7 +21,7 @@ public class PostDataSet {
     private long dislikes = 0;
     private long points = 0;
 
-    public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
+    public PostDataSet(long id, long thread, String forum, String user, String message, String date, Long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
         this.id = id;
         this.thread = thread;
@@ -27,7 +29,7 @@ public class PostDataSet {
         this.user = user;
         this.message = message;
         this.date = date;
-        this.parent = parent;
+        this.parent = parent == 0 ? null : parent;
         this.isApproved = isApproved;
         this.isHighlighted = isHighlighted;
         this.isEdited = isEdited;
@@ -35,7 +37,7 @@ public class PostDataSet {
         this.isDeleted = isDeleted;
     }
 
-    public PostDataSet(long id, long thread, String forum, String user, String message, String date, long parent,
+    public PostDataSet(long id, long thread, String forum, String user, String message, String date, Long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted,
                        long likes, long dislikes) {
         this.id = id;
@@ -43,8 +45,8 @@ public class PostDataSet {
         this.forum = forum;
         this.user = user;
         this.message = message;
-        this.date = date;
-        this.parent = parent;
+        this.date = date.substring(0, 19);
+        this.parent = parent == 0 ? null : parent;
         this.isApproved = isApproved;
         this.isHighlighted = isHighlighted;
         this.isEdited = isEdited;
@@ -79,26 +81,31 @@ public class PostDataSet {
         return date;
     }
 
-    public long getParent() {
+    public Long getParent() {
         return parent;
     }
 
+    @JsonProperty("isApproved")
     public boolean isApproved() {
         return isApproved;
     }
 
+    @JsonProperty("isHighlighted")
     public boolean isHighlighted() {
         return isHighlighted;
     }
 
+    @JsonProperty("isEdited")
     public boolean isEdited() {
         return isEdited;
     }
 
+    @JsonProperty("isSpam")
     public boolean isSpam() {
         return isSpam;
     }
 
+    @JsonProperty("isDeleted")
     public boolean isDeleted() {
         return isDeleted;
     }

@@ -67,6 +67,7 @@ public class UserService extends AbstractDbService {
                 "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
+        System.out.println(formatter.toString());
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 if (!resultSet.next())
@@ -91,12 +92,12 @@ public class UserService extends AbstractDbService {
                                          String since, Integer limit, String order) throws DbException {
         String query = "SELECT * FROM Post WHERE user = '" + email + '\'';
         if (since != null) {
-            query += " AND date >= " + since;
+            query += " AND date >= '" + since + "\' ";
         }
         if (order == null)
             query += " ORDER BY date desc";
         else
-            query += "ORDER BY date " + order;
+            query += " ORDER BY date " + order;
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ";";
@@ -108,7 +109,7 @@ public class UserService extends AbstractDbService {
                         while (resultSet.next()) {
                             final PostFull post = new PostFull(
                                     resultSet.getLong("id"),
-                                    resultSet.getString("thread"),
+                                    resultSet.getLong("thread"),
                                     resultSet.getString("forum"),
                                     resultSet.getString("user"),
                                     resultSet.getString("message"),
@@ -165,24 +166,22 @@ public class UserService extends AbstractDbService {
                 "JOIN Follow AS UserFollowers ON (UserFollowers.followee = '" + email + "' " +
                 "AND User.email = UserFollowers.follower) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
         if (sinceId != null)
-            query += " WHERE User.id > " + sinceId.toString();
+            query += " WHERE User.id>=" + sinceId.toString();
         query += " GROUP BY User.id ORDER BY User.name ";
         if (order == null)
             query += "desc ";
         else
             query += order;
         if (limit != null)
-            query += "LIMIT " + limit.toString();
+            query += " LIMIT " + limit.toString();
         query += ';';
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
-                int count = 0;
                 while (resultSet.next()) {
-                    count++;
                     result.add(new UserFull(
                             resultSet.getLong("id"),
                             resultSet.getString("email"),
@@ -194,8 +193,6 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("followees"),
                             resultSet.getString("subscriptions")));
                 }
-                if (count == 0)
-                    return null;
                 return result;
             });
         } catch (SQLException e) {
@@ -209,27 +206,25 @@ public class UserService extends AbstractDbService {
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
-                "JOIN Follow AS UserFollowers ON (UserFollowers.following = '" + email + "' " +
+                "JOIN Follow AS UserFollowers ON (UserFollowers.follower = '" + email + "' " +
                 "AND User.email = UserFollowers.followee) " +
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Followss AS Following ON (User.email = Following.follower)  " +
+                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
         if (sinceId != null)
-            query += " WHERE User.id > " + sinceId.toString();
+            query += " WHERE User.id >= " + sinceId.toString();
         query += " GROUP BY User.id ORDER BY User.name ";
         if (order == null)
             query += "desc ";
         else
             query += order;
         if (limit != null)
-            query += "LIMIT " + limit.toString();
+            query += " LIMIT " + limit.toString();
         query += ';';
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
-                int count = 0;
                 while (resultSet.next()) {
-                    count++;
                     result.add(new UserFull(
                             resultSet.getLong("id"),
                             resultSet.getString("email"),
@@ -241,8 +236,6 @@ public class UserService extends AbstractDbService {
                             resultSet.getString("followees"),
                             resultSet.getString("subscriptions")));
                 }
-                if (count == 0)
-                    return null;
                 return result;
             });
         } catch (SQLException e) {
@@ -252,7 +245,7 @@ public class UserService extends AbstractDbService {
 
     public UserFull updateUser(String user, String about, String name) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE User (about, name) SET ('%s','%s') WHERE email = '%s';", about, name, user);
+        formatter.format("UPDATE IGNORE User SET about='%s', name='%s' WHERE email = '%s';", about, name, user);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
                 return null;

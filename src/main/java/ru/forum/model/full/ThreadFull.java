@@ -22,7 +22,7 @@ public class ThreadFull {
     public ThreadFull(long id, String date, String title, String slug, String message, boolean isClosed,
                       boolean isDeleted, long likes, long dislikes, long posts) {
         this.id = id;
-        this.date = date;
+        this.date = date.substring(0, 19);
         this.title = title;
         this.slug = slug;
         this.message = message;
@@ -39,7 +39,7 @@ public class ThreadFull {
         this.id = id;
         this.forum = forum;
         this.user = user;
-        this.date = date;
+        this.date = date.substring(0, 19);
         this.title = title;
         this.slug = slug;
         this.message = message;

@@ -7,10 +7,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.Response;
+import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
+import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.request.*;
+import ru.forum.service.PostService;
 import ru.forum.service.ThreadService;
 
 import java.util.ArrayList;
@@ -22,10 +25,12 @@ public class ThreadController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadController.class);
     private ThreadService threadService;
+    private PostService postService;
 
     @Autowired
-    public ThreadController(ThreadService threadService) {
+    public ThreadController(ThreadService threadService, PostService postService) {
         this.threadService = threadService;
+        this.postService = postService;
     }
 
     @RequestMapping(path = "/db/api/thread/close/", method = RequestMethod.POST)
@@ -74,8 +79,8 @@ public class ThreadController {
     }
 
     @RequestMapping(path = "/db/api/thread/list/", method = RequestMethod.GET)
-    public ResponseEntity listThread(@RequestParam(value = "user") String user,
-                                           @RequestParam(value = "forum") String forum,
+    public ResponseEntity listThread(@RequestParam(value = "user", required = false) String user,
+                                           @RequestParam(value = "forum", required = false) String forum,
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,
                                            @RequestParam(value = "since", required = false) String since) {
@@ -101,11 +106,21 @@ public class ThreadController {
 
     @RequestMapping(path = "/db/api/thread/listPosts/", method = RequestMethod.GET)
     public ResponseEntity listPosts(@RequestParam(value = "thread") int threadId,
-                                    @RequestParam(value = "sort") String sort,
+                                    @RequestParam(value = "sort", required = false) String sort,
                                     @RequestParam(value = "limit", required = false) Integer limit,
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since) {
-        return ResponseEntity.ok(new Response<>(0, "Ok!"));
+        try {
+            if ((sort == null) || (sort.equals("flat"))) {
+                final ArrayList<PostDataSet> list = threadService.listPosts(threadId, since, limit, order, sort);
+                return ResponseEntity.ok(new Response<>(0, list));
+            }
+            final ArrayList<PostFull> list = postService.listPostsByThread(threadId, since, limit, order);
+            return ResponseEntity.ok(new Response<>(0, list));
+        } catch (DbException e) {
+            LOGGER.error("Unable to list posts by thread:", e);
+            return ResponseEntity.ok(new Response<>(4, "Inner service error!"));
+        }
     }
 
     @RequestMapping(path = "/db/api/thread/open/", method = RequestMethod.POST)
@@ -174,7 +189,7 @@ public class ThreadController {
     @RequestMapping(path = "/db/api/thread/unsubscribe/", method = RequestMethod.POST)
     public ResponseEntity unsubscribeThread(@RequestBody SubscribeRequest request) {
         try {
-            final SubscriptionDataSet subs = threadService.subscribeThread(request.getUser(), request.getThread());
+            final SubscriptionDataSet subs = threadService.unsubscribeThread(request.getUser(), request.getThread());
             if (subs == null)
                 return ResponseEntity.ok(new Response<>(1, "No such thread!"));
             return ResponseEntity.ok(new Response<>(0, subs));

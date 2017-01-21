@@ -73,7 +73,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean closeThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Thread (isClosed) SET (1) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread SET isClosed=1 WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -94,7 +94,7 @@ public class ThreadService extends AbstractDbService {
         postfix += ';';
 
         final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.id) AS posts ");
-        final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread)");
+        final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
 
         if (containsUser) {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -120,7 +120,7 @@ public class ThreadService extends AbstractDbService {
                         System.out.println(resultSet.getString("Thread.date"));
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
-                                resultSet.getString("Thread.date").substring(0, 19),
+                                resultSet.getString("Thread.date"),
                                 resultSet.getString("Thread.title"),
                                 resultSet.getString("Thread.slug"),
                                 resultSet.getString("Thread.message"),
@@ -175,19 +175,20 @@ public class ThreadService extends AbstractDbService {
             postfix = " WHERE Thread.forum = '" + filter + '\'';
 
         if (since != null) {
-            postfix += " AND Thread.date >= " + since;
+            postfix += " AND Thread.date >= '" + since + '\'';
         }
+        postfix += " GROUP BY Thread.id ";
         if (order == null)
             postfix += " ORDER BY Thread.date desc";
         else
-            postfix += "ORDER BY Thread.date " + order;
+            postfix += " ORDER BY Thread.date " + order;
         if (limit != null)
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        final String query = "SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread) " + postfix;
-
+        final String query = "SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+                "ON(Tpost.thread=Thread.id AND Tpost.isDeleted=0) " + postfix;
+        System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final ArrayList<ThreadDataSet> result = new ArrayList<>();
@@ -217,7 +218,7 @@ public class ThreadService extends AbstractDbService {
 
     public boolean openThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Thread (isClosed) SET (0) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread SET isClosed=0 WHERE id = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -227,21 +228,37 @@ public class ThreadService extends AbstractDbService {
 
     public boolean removeThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Thread (isDeleted) SET (1) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread SET isDeleted=1 WHERE id = %d;", threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+                return false;
+        } catch (SQLException e) {
+            throw new DbException("Unable to remove thread!", e);
+        }
+        stringBuilder.setLength(0);
+        formatter.format("UPDATE IGNORE Post SET isDeleted=1 WHERE thread = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
-            throw new DbException("Unable to remove thread!", e);
+            throw new DbException("Unable to remove posts!", e);
         }
     }
 
     public boolean restoreThread(long threadId) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Thread (isDeleted) SET (0) WHERE id = %d;", threadId);
+        formatter.format("UPDATE IGNORE Thread SET isDeleted=0 WHERE id = %d;", threadId);
+        try {
+            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+                return false;
+        } catch (SQLException e) {
+            throw new DbException("Unable to restore thread!", e);
+        }
+        stringBuilder.setLength(0);
+        formatter.format("UPDATE IGNORE Post SET isDeleted=0 WHERE thread = %d;", threadId);
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
-            throw new DbException("Unable to restore thread!", e);
+            throw new DbException("Unable to restore posts!", e);
         }
     }
 
@@ -274,7 +291,7 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadDataSet updateThread(long threadId, String slug, String message) throws DbException {
         stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Thread(slug,message) SET('%s','%s') WHERE id = %d;", slug, message, threadId);
+        formatter.format("UPDATE IGNORE Thread SET slug='%s', message='%s' WHERE id = %d;", slug, message, threadId);
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;
@@ -282,8 +299,8 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update thread!", e);
         }
-        formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
+        formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -325,8 +342,8 @@ public class ThreadService extends AbstractDbService {
             throw new DbException("Unable to update vote for thread!", e);
         }
         stringBuilder.setLength(0);
-        formatter.format("SELECT Thread.*, COUNT(Tpost.*) AS posts FROM Thread JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread) WHERE id = %d;", threadId);
+        formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -351,19 +368,57 @@ public class ThreadService extends AbstractDbService {
 
     }
 
-    /*public ArrayList<PostDataSet> listPosts(long threadId, String since, Integer limit, String order, String sort)
+    public ArrayList<PostDataSet> listPosts(long threadId, String since, Integer limit, String order, String sort)
         throws DbException {
 
-        String query = "SELECT * FORM Post WHERE thread = " + Long.toString(threadId);
+        /*String query = "SELECT * FORM Post WHERE thread = " + Long.toString(threadId);
         if (since != null)
             query += " AND date >= " + since;
         if (sort == null)
             sort = "flat";
         if (sort.equals("flat"))
-            query += " ORDER BY date " + ((order == null) ? "DESC" : sort);
+            query += " ORDER BY date " + ((order == null) ? "DESC" : sort); */
 
+        if ((sort == null) || (sort.equals("flat"))) {
+            String query = "SELECT * FROM Post WHERE thread = " + Long.toString(threadId);
+            if (since != null)
+                query += " AND date >= '" + since + '\'';
+            if (sort == null)
+                sort = "flat";
+            if (sort.equals("flat"))
+                query += " ORDER BY date " + ((order == null) ? "DESC" : order);
+            if (limit != null)
+                query += " LIMIT " + limit.toString();
+            query += ';';
+            try {
+                return executor.execQuery(getConnection(), query, resultSet -> {
+                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    while (resultSet.next()) {
+                        result.add(new PostDataSet(
+                                resultSet.getLong("id"),
+                                resultSet.getLong("thread"),
+                                resultSet.getString("forum"),
+                                resultSet.getString("user"),
+                                resultSet.getString("message"),
+                                resultSet.getString("date"),
+                                resultSet.getLong("parent"),
+                                resultSet.getBoolean("isApproved"),
+                                resultSet.getBoolean("isHighlighted"),
+                                resultSet.getBoolean("isEdited"),
+                                resultSet.getBoolean("isSpam"),
+                                resultSet.getBoolean("isDeleted"),
+                                resultSet.getLong("likes"),
+                                resultSet.getLong("dislikes"))
+                        );
+                    }
+                    return result;
+                });
+            } catch (SQLException e) {
+                throw new DbException("Unable to list posts!", e);
+            }
+        }
 
-
-    } */
+        return new ArrayList<PostDataSet>();
+    }
 
 }
