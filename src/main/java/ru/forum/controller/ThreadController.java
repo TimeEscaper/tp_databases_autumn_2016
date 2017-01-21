@@ -66,7 +66,10 @@ public class ThreadController {
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
-        System.out.println(relatedList.size());
+        for (String value : relatedList) {
+            if ((!value.equals("user")) && (!value.equals("forum")))
+                return ResponseEntity.ok(new Response<>(3, "Wrong query!"));
+        }
         try {
             final ThreadFull thread = threadService.threadDetails(threadId, relatedList);
             if (thread == null)
@@ -111,11 +114,7 @@ public class ThreadController {
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since) {
         try {
-            if ((sort == null) || (sort.equals("flat"))) {
-                final ArrayList<PostDataSet> list = threadService.listPosts(threadId, since, limit, order, sort);
-                return ResponseEntity.ok(new Response<>(0, list));
-            }
-            final ArrayList<PostFull> list = postService.listPostsByThread(threadId, since, limit, order);
+            final ArrayList<PostDataSet> list = threadService.listPosts(threadId, since, limit, order, sort);
             return ResponseEntity.ok(new Response<>(0, list));
         } catch (DbException e) {
             LOGGER.error("Unable to list posts by thread:", e);

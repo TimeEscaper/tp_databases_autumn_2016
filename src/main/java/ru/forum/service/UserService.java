@@ -67,7 +67,7 @@ public class UserService extends AbstractDbService {
                 "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
-        System.out.println(formatter.toString());
+        //System.out.println(formatter.toString());
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 if (!resultSet.next())

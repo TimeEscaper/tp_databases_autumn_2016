@@ -1,8 +1,10 @@
 package ru.forum.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @SuppressWarnings("unused")
+//@JsonIgnoreProperties({"rootParent", "path"})
 public class PostDataSet {
 
     private long id;
@@ -20,6 +22,8 @@ public class PostDataSet {
     private long likes = 0;
     private long dislikes = 0;
     private long points = 0;
+    private long rootParent = 0;
+    private String path;
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, Long parent,
                        boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam, boolean isDeleted) {
@@ -28,13 +32,14 @@ public class PostDataSet {
         this.forum = forum;
         this.user = user;
         this.message = message;
-        this.date = date;
+        this.date = date.substring(0, 19);
         this.parent = parent == 0 ? null : parent;
         this.isApproved = isApproved;
         this.isHighlighted = isHighlighted;
         this.isEdited = isEdited;
         this.isSpam = isSpam;
         this.isDeleted = isDeleted;
+        this.rootParent = id;
     }
 
     public PostDataSet(long id, long thread, String forum, String user, String message, String date, Long parent,
@@ -55,6 +60,29 @@ public class PostDataSet {
         this.likes = likes;
         this.dislikes = dislikes;
         this.points = likes - dislikes;
+        this.rootParent = id;
+    }
+
+    public PostDataSet(long id, long thread, String forum, String user, String message, String date, Long parent,
+                       boolean isApproved, boolean isHighlighted, boolean isEdited, boolean isSpam,
+                       boolean isDeleted, long likes, long dislikes, long rootParent, String path) {
+        this.id = id;
+        this.thread = thread;
+        this.forum = forum;
+        this.user = user;
+        this.message = message;
+        this.date = date.substring(0, 19);
+        this.parent = parent == 0 ? null : parent;;
+        this.isApproved = isApproved;
+        this.isHighlighted = isHighlighted;
+        this.isEdited = isEdited;
+        this.isSpam = isSpam;
+        this.isDeleted = isDeleted;
+        this.likes = likes;
+        this.dislikes = dislikes;
+        this.points = likes - dislikes;
+        this.rootParent = rootParent;
+        this.path = path;
     }
 
     public long getId() {
@@ -115,4 +143,20 @@ public class PostDataSet {
     public long getDislikes() { return dislikes; }
 
     public long getPoints() { return points; }
+
+    public long getRootParent() { return rootParent; }
+
+    public String getPath() { return path; }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setRootParent(long rootParent) {
+        this.rootParent = rootParent;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
 }

@@ -98,12 +98,12 @@ public class ForumService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
                         resultSet.next();
-                        System.out.println(resultSet.getString("Forum.name"));
+                        //System.out.println(resultSet.getString("Forum.name"));
                         final ForumFull result = new ForumFull(
                                 resultSet.getLong("Forum.id"),
                                 resultSet.getString("Forum.name"),
@@ -128,7 +128,7 @@ public class ForumService extends AbstractDbService {
                         return result;
                     });
         } catch (SQLException e) {
-            System.out.println(query);
+            //System.out.println(query);
             throw new DbException("Unable to get forum or related data!", e);
         }
 
@@ -186,7 +186,7 @@ public class ForumService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -269,11 +269,11 @@ public class ForumService extends AbstractDbService {
             postfix += " AND Thread.date >= '" + since + "\' ";
         }
         postfix += " GROUP BY ";
-        if (related.contains("user"))
-            postfix += "User.id,";
-        if (related.contains("forum"))
-            postfix += "Forum.id,";
         postfix += "Thread.id ";
+        if (related.contains("user"))
+            postfix += " ,User.id ";
+        if (related.contains("forum"))
+            postfix += " ,Forum.id ";
         if (order == null)
             postfix += " ORDER BY Thread.date desc";
         else
@@ -283,7 +283,7 @@ public class ForumService extends AbstractDbService {
         postfix += ";";
 
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.id) AS posts ");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts ");
         final StringBuilder joins = new StringBuilder(" FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
 
         for (String table : related) {
@@ -302,7 +302,7 @@ public class ForumService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -361,12 +361,14 @@ public class ForumService extends AbstractDbService {
         String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = '" + forum + "\')";
         if (since != null)
             postfix += " AND User.id >= " + since;
-        postfix += " GROUP BY User.id ";
-
-        if (order == null)
-            postfix += " ORDER BY User.name desc";
+        final String nullOrder;
+        if ((order == null) || (order.equals("desc")))
+            nullOrder = "asc";
         else
-            postfix += "ORDER BY User.name " + order;
+            nullOrder = "desc";
+        postfix += " GROUP BY User.id ";
+        postfix += " ORDER BY User.isAnonymous " + nullOrder + ", User.name "
+                + ((order == null) ? "desc" : order) + ' ';
         if (limit != null)
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
@@ -379,7 +381,7 @@ public class ForumService extends AbstractDbService {
                 "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
                 "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " + postfix;
-
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {

@@ -111,13 +111,13 @@ public class ThreadService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
                         if (!resultSet.next())
                             return null;
-                        System.out.println(resultSet.getString("Thread.date"));
+                        //System.out.println(resultSet.getString("Thread.date"));
                         final ThreadFull result = new ThreadFull(
                                 resultSet.getLong("Thread.id"),
                                 resultSet.getString("Thread.date"),
@@ -188,7 +188,7 @@ public class ThreadService extends AbstractDbService {
 
         final String query = "SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
                 "ON(Tpost.thread=Thread.id AND Tpost.isDeleted=0) " + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 final ArrayList<ThreadDataSet> result = new ArrayList<>();
@@ -299,8 +299,9 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update thread!", e);
         }
+        stringBuilder.setLength(0);
         formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE id = %d;", threadId);
+                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -343,7 +344,7 @@ public class ThreadService extends AbstractDbService {
         }
         stringBuilder.setLength(0);
         formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE id = %d;", threadId);
+                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
@@ -378,15 +379,11 @@ public class ThreadService extends AbstractDbService {
             sort = "flat";
         if (sort.equals("flat"))
             query += " ORDER BY date " + ((order == null) ? "DESC" : sort); */
-
         if ((sort == null) || (sort.equals("flat"))) {
             String query = "SELECT * FROM Post WHERE thread = " + Long.toString(threadId);
             if (since != null)
                 query += " AND date >= '" + since + '\'';
-            if (sort == null)
-                sort = "flat";
-            if (sort.equals("flat"))
-                query += " ORDER BY date " + ((order == null) ? "DESC" : order);
+            query += " ORDER BY date " + ((order == null) ? "DESC" : order);
             if (limit != null)
                 query += " LIMIT " + limit.toString();
             query += ';';
@@ -410,6 +407,106 @@ public class ThreadService extends AbstractDbService {
                                 resultSet.getLong("likes"),
                                 resultSet.getLong("dislikes"))
                         );
+                    }
+                    return result;
+                });
+            } catch (SQLException e) {
+                throw new DbException("Unable to list posts!", e);
+            }
+        } else if (sort.equals("tree")) {
+            String query = "SELECT * FROM Post WHERE thread = " + Long.toString(threadId);
+            if (since != null)
+                query += " AND date >= '" + since + '\'';
+            query += " ORDER BY root_parent " + ((order == null) ? "DESC" : order) + ", path ASC";
+            if (limit != null)
+                query += " LIMIT " + limit.toString();
+            query += ';';
+            try {
+                return executor.execQuery(getConnection(), query, resultSet -> {
+                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    while (resultSet.next()) {
+                        result.add(new PostDataSet(
+                                resultSet.getLong("id"),
+                                resultSet.getLong("thread"),
+                                resultSet.getString("forum"),
+                                resultSet.getString("user"),
+                                resultSet.getString("message"),
+                                resultSet.getString("date"),
+                                resultSet.getLong("parent"),
+                                resultSet.getBoolean("isApproved"),
+                                resultSet.getBoolean("isHighlighted"),
+                                resultSet.getBoolean("isEdited"),
+                                resultSet.getBoolean("isSpam"),
+                                resultSet.getBoolean("isDeleted"),
+                                resultSet.getLong("likes"),
+                                resultSet.getLong("dislikes"),
+                                resultSet.getLong("root_parent"),
+                                resultSet.getString("path"))
+                        );
+                    }
+                    return result;
+                });
+            } catch (SQLException e) {
+                throw new DbException("Unable to list posts!", e);
+            }
+        } else if (sort.equals("parent_tree")) {
+            String query = "SELECT * FROM Post WHERE thread = " + Long.toString(threadId);
+            if (since != null)
+                query += " AND date >= '" + since + '\'';
+            query += " ORDER BY root_parent " + ((order == null) ? "DESC" : order) + ", path;";
+            try {
+                return executor.execQuery(getConnection(), query, resultSet -> {
+                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    if (limit == null) {
+                        while (resultSet.next()) {
+                            result.add(new PostDataSet(
+                                    resultSet.getLong("id"),
+                                    resultSet.getLong("thread"),
+                                    resultSet.getString("forum"),
+                                    resultSet.getString("user"),
+                                    resultSet.getString("message"),
+                                    resultSet.getString("date"),
+                                    resultSet.getLong("parent"),
+                                    resultSet.getBoolean("isApproved"),
+                                    resultSet.getBoolean("isHighlighted"),
+                                    resultSet.getBoolean("isEdited"),
+                                    resultSet.getBoolean("isSpam"),
+                                    resultSet.getBoolean("isDeleted"),
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes"),
+                                    resultSet.getLong("root_parent"),
+                                    resultSet.getString("path"))
+                            );
+                        }
+                    } else {
+                        int parentCount = 0;
+                        int currentParent = -1;
+                        while (resultSet.next()) {
+                            if (resultSet.getInt("root_parent") != currentParent) {
+                                parentCount++;
+                                currentParent = resultSet.getInt("root_parent");
+                            }
+                            if (parentCount > limit)
+                                break;
+                            result.add(new PostDataSet(
+                                    resultSet.getLong("id"),
+                                    resultSet.getLong("thread"),
+                                    resultSet.getString("forum"),
+                                    resultSet.getString("user"),
+                                    resultSet.getString("message"),
+                                    resultSet.getString("date"),
+                                    resultSet.getLong("parent"),
+                                    resultSet.getBoolean("isApproved"),
+                                    resultSet.getBoolean("isHighlighted"),
+                                    resultSet.getBoolean("isEdited"),
+                                    resultSet.getBoolean("isSpam"),
+                                    resultSet.getBoolean("isDeleted"),
+                                    resultSet.getLong("likes"),
+                                    resultSet.getLong("dislikes"),
+                                    resultSet.getLong("root_parent"),
+                                    resultSet.getString("path"))
+                            );
+                        }
                     }
                     return result;
                 });

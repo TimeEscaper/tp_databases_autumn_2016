@@ -2,12 +2,12 @@ package ru.forum.service;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.parsing.NullSourceExtractor;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
+import ru.forum.helper.Base65;
 import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
@@ -19,7 +19,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"Duplicates", "unused", "SwitchStatementWithoutDefaultBranch"})
+import static ru.forum.helper.Base65.makePath;
+
+@SuppressWarnings({"Duplicates", "unused", "SwitchStatementWithoutDefaultBranch", "OverlyComplexMethod"})
 @Service
 public class PostService extends AbstractDbService {
 
@@ -32,6 +34,7 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to get database connection!", e);
         }
     }
+
 
     public PostDataSet createPost(String date, long thread, String message, String user, String forum, Long parent,
                                   Boolean isApproved, Boolean isHighlighted, Boolean isEdited,
@@ -56,8 +59,9 @@ public class PostService extends AbstractDbService {
 
         stringBuilder.setLength(0);
         formatter.format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
+        final PostDataSet post;
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            post = executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),
@@ -78,6 +82,37 @@ public class PostService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to get post after create!", e);
         }
+
+        if (parent == null) {
+            post.setRootParent(post.getId());
+            post.setPath(makePath(post.getId()));
+        } else {
+            final String query = "SELECT root_parent,path FROM Post WHERE id=" + post.getParent().toString() + ';';
+            try {
+                executor.execQuery(getConnection(), query, resultSet -> {
+                    resultSet.next();
+                    post.setRootParent(resultSet.getLong("root_parent"));
+                    if (resultSet.getString("root_parent") != null)
+                        post.setPath(resultSet.getString("path") + makePath(post.getId()));
+                    else
+                        post.setPath(makePath(post.getId()));
+                    return null;
+                });
+            } catch (SQLException e) {
+                throw new DbException("Unable to get post parent!",e);
+            }
+         }
+
+         try {
+             final String update = "UPDATE IGNORE Post SET root_parent=" + post.getRootParent() + ", path='" +
+                     post.getPath() + "' WHERE id=" + Long.toString(post.getId()) + ';';
+             if (executor.execUpdate(getConnection(), update) == 0)
+                 throw new DbException("Unable to update post, query:" + update, null);
+         } catch (SQLException e) {
+             throw new DbException("Unable to update post!", e);
+         }
+
+         return post;
     }
 
     public PostFull postDetails(long postId, List<String> related) throws DbException {
@@ -116,7 +151,7 @@ public class PostService extends AbstractDbService {
         }
 
         final String query = tables.toString() + joins + postfix;
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -193,7 +228,7 @@ public class PostService extends AbstractDbService {
             throws DbException {
         String query = "SELECT * FROM Post WHERE forum = '" + forum + '\'';
         if (since != null) {
-            query += " AND date >= '" + since + "\'";
+            query += " AND date >= '" + since + '\'';
         }
         if (order == null)
             query += " ORDER BY date desc";
@@ -202,7 +237,7 @@ public class PostService extends AbstractDbService {
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ";";
-        System.out.println(query);
+        //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
@@ -239,7 +274,7 @@ public class PostService extends AbstractDbService {
             throws DbException {
         String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
         if (since != null) {
-            query += " AND date >= '" + since + "\'";
+            query += " AND date >= '" + since + '\'';
         }
         if (order == null)
             query += " ORDER BY date desc";
@@ -283,7 +318,7 @@ public class PostService extends AbstractDbService {
     public boolean removePost(long postId) throws DbException {
         stringBuilder.setLength(0);
         formatter.format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
-        System.out.println(formatter.toString());
+        //System.out.println(formatter.toString());
         try {
             return executor.execUpdate(getConnection(), formatter.toString()) != 0;
         } catch (SQLException e) {
@@ -345,7 +380,7 @@ public class PostService extends AbstractDbService {
             formatter.format("UPDATE IGNORE Post SET dislikes = dislikes + 1 WHERE id = %d;", postId);
         } else
             return null;
-        System.out.println(formatter.toString());
+        //System.out.println(formatter.toString());
         try {
             if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
                 return null;
