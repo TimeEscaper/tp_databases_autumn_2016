@@ -79,7 +79,7 @@ public class ForumService extends AbstractDbService {
 
     public ForumFull forumDetails(String forum, String user) throws DbException {
 
-        String postfix = " WHERE Forum.short_name = '" + forum + "\'";
+        String postfix = " WHERE Forum.short_name = '" + forum + '\'';
         if (user != null)
             postfix += " GROUP BY User.id, Forum.id";
         postfix += ';';
@@ -169,7 +169,7 @@ public class ForumService extends AbstractDbService {
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name) ");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(Tpost.id) AS posts");
+                    tables.append(" , Thread.*, COUNT(DISTINCT Tpost.id) AS posts");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
                             "LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
                     break;

@@ -10,10 +10,8 @@ import ru.forum.model.Response;
 import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
-import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.request.*;
-import ru.forum.service.PostService;
 import ru.forum.service.ThreadService;
 
 import java.util.ArrayList;
@@ -25,12 +23,10 @@ public class ThreadController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ThreadController.class);
     private ThreadService threadService;
-    private PostService postService;
 
     @Autowired
-    public ThreadController(ThreadService threadService, PostService postService) {
+    public ThreadController(ThreadService threadService) {
         this.threadService = threadService;
-        this.postService = postService;
     }
 
     @RequestMapping(path = "/db/api/thread/close/", method = RequestMethod.POST)

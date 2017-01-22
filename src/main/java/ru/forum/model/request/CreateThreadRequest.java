@@ -1,8 +1,8 @@
 package ru.forum.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ser.impl.IndexedStringListSerializer;
 
+@SuppressWarnings("unused")
 public class CreateThreadRequest {
     private String forum;
     private String user;

@@ -1,5 +1,6 @@
 package ru.forum.model.request;
 
+@SuppressWarnings("unused")
 public class VoteThreadRequest {
     private int vote;
     private long thread;

@@ -1,5 +1,6 @@
 package ru.forum.model.request;
 
+@SuppressWarnings("unused")
 public class ThreadRequest {
     private long thread;
 

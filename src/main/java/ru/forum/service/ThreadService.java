@@ -10,16 +10,14 @@ import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.SubscriptionDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
-import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
-@SuppressWarnings({"Duplicates", "unused"})
+@SuppressWarnings({"Duplicates", "unused", "OverlyComplexMethod"})
 @Service
 public class ThreadService extends AbstractDbService {
 
@@ -93,7 +91,7 @@ public class ThreadService extends AbstractDbService {
             postfix += " ,Forum.id";
         postfix += ';';
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(Tpost.id) AS posts ");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts ");
         final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
 
         if (containsUser) {
@@ -186,7 +184,7 @@ public class ThreadService extends AbstractDbService {
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        final String query = "SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+        final String query = "SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
                 "ON(Tpost.thread=Thread.id AND Tpost.isDeleted=0) " + postfix;
         //System.out.println(query);
         try {
@@ -300,7 +298,7 @@ public class ThreadService extends AbstractDbService {
             throw new DbException("Unable to update thread!", e);
         }
         stringBuilder.setLength(0);
-        formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+        formatter.format("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
                 "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
@@ -343,7 +341,7 @@ public class ThreadService extends AbstractDbService {
             throw new DbException("Unable to update vote for thread!", e);
         }
         stringBuilder.setLength(0);
-        formatter.format("SELECT Thread.*, COUNT(Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
+        formatter.format("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
                 "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
@@ -389,7 +387,7 @@ public class ThreadService extends AbstractDbService {
             query += ';';
             try {
                 return executor.execQuery(getConnection(), query, resultSet -> {
-                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    final ArrayList<PostDataSet> result = new ArrayList<>();
                     while (resultSet.next()) {
                         result.add(new PostDataSet(
                                 resultSet.getLong("id"),
@@ -423,7 +421,7 @@ public class ThreadService extends AbstractDbService {
             query += ';';
             try {
                 return executor.execQuery(getConnection(), query, resultSet -> {
-                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    final ArrayList<PostDataSet> result = new ArrayList<>();
                     while (resultSet.next()) {
                         result.add(new PostDataSet(
                                 resultSet.getLong("id"),
@@ -456,7 +454,7 @@ public class ThreadService extends AbstractDbService {
             query += " ORDER BY root_parent " + ((order == null) ? "DESC" : order) + ", path;";
             try {
                 return executor.execQuery(getConnection(), query, resultSet -> {
-                    final ArrayList<PostDataSet> result = new ArrayList<PostDataSet>();
+                    final ArrayList<PostDataSet> result = new ArrayList<>();
                     if (limit == null) {
                         while (resultSet.next()) {
                             result.add(new PostDataSet(
@@ -515,7 +513,7 @@ public class ThreadService extends AbstractDbService {
             }
         }
 
-        return new ArrayList<PostDataSet>();
+        return new ArrayList<>();
     }
 
 }

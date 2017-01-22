@@ -3,6 +3,7 @@ package ru.forum.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("unused")
 public class CreateUserRequest {
     String username;
     String about;

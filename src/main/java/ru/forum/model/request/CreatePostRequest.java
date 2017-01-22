@@ -2,6 +2,7 @@ package ru.forum.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@SuppressWarnings("unused")
 public class CreatePostRequest {
     private long thread;
     private String forum;

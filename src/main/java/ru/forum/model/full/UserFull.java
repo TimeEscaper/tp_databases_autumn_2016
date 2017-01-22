@@ -1,9 +1,6 @@
 package ru.forum.model.full;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.mysql.jdbc.StringUtils;
-import org.eclipse.jetty.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;

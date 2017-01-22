@@ -7,7 +7,6 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
-import ru.forum.helper.Base65;
 import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.PostDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
@@ -134,7 +133,7 @@ public class PostService extends AbstractDbService {
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(Tpost.id) AS posts");
+                    tables.append(" , Thread.*, COUNT(DISTINCT Tpost.id) AS posts");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
                             "  LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
                     break;

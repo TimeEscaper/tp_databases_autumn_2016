@@ -11,7 +11,6 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
