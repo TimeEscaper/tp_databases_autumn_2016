@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ru.forum.helper.Base65.makePath;
+import static ru.forum.helper.QueryHelper.format;
 
 @SuppressWarnings({"Duplicates", "unused", "SwitchStatementWithoutDefaultBranch", "OverlyComplexMethod"})
 @Service
@@ -38,29 +39,29 @@ public class PostService extends AbstractDbService {
     public PostDataSet createPost(String date, long thread, String message, String user, String forum, Long parent,
                                   Boolean isApproved, Boolean isHighlighted, Boolean isEdited,
                                   Boolean isSpam, Boolean isDeleted) throws DbException {
-        stringBuilder.setLength(0);
+        String query;
         if (parent != null)
-            formatter.format("INSERT IGNORE INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited," +
+            query = format("INSERT IGNORE INTO Post(thread,forum,user,message,date,parent,isApproved,isHighlighted,isEdited," +
                         "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d,%d,%d,%d);",
                 thread, forum, user, message, date, parent, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
                 isSpam ? 1 : 0, isDeleted ? 1 : 0);
         else
-            formatter.format("INSERT IGNORE INTO Post(thread,forum,user,message,date,isApproved,isHighlighted,isEdited," +
+            query = format("INSERT IGNORE INTO Post(thread,forum,user,message,date,isApproved,isHighlighted,isEdited," +
                             "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d,%d,%d);",
                     thread, forum, user, message, date, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
                     isSpam ? 1 : 0, isDeleted ? 1 : 0);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+            if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
         } catch (SQLException e) {
+            System.out.println(query);
             throw new DbException("Unable to create post!", e);
         }
 
-        stringBuilder.setLength(0);
-        formatter.format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
+        query = format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
         final PostDataSet post;
         try {
-            post = executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            post = executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),
@@ -86,9 +87,9 @@ public class PostService extends AbstractDbService {
             post.setRootParent(post.getId());
             post.setPath(makePath(post.getId()));
         } else {
-            final String query = "SELECT root_parent,path FROM Post WHERE id=" + post.getParent().toString() + ';';
+            final String queryParent = "SELECT root_parent,path FROM Post WHERE id=" + post.getParent().toString() + ';';
             try {
-                executor.execQuery(getConnection(), query, resultSet -> {
+                executor.execQuery(getConnection(), queryParent, resultSet -> {
                     resultSet.next();
                     post.setRootParent(resultSet.getLong("root_parent"));
                     if (resultSet.getString("root_parent") != null)
@@ -315,40 +316,36 @@ public class PostService extends AbstractDbService {
     }
 
     public boolean removePost(long postId) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
+        final String query = format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
         //System.out.println(formatter.toString());
         try {
-            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
+            return executor.execUpdate(getConnection(), query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to remove post!", e);
         }
     }
 
     public boolean restorePost(long postId) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
+        final String query = format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
         try {
-            return executor.execUpdate(getConnection(), formatter.toString()) != 0;
+            return executor.execUpdate(getConnection(), query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to restore post!", e);
         }
     }
 
     public PostDataSet updatePost(long postId, String message) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE Post SET message='%s' WHERE id=%d;", message, postId);
+        String query = format("UPDATE IGNORE Post SET message='%s' WHERE id=%d;", message, postId);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+            if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
         } catch (SQLException e) {
             throw new DbException("Unable to update post!", e);
         }
 
-        stringBuilder.setLength(0);
-        formatter.format("SELECT * FROM Post WHERE id = %d", postId);
+        query = format("SELECT * FROM Post WHERE id = %d", postId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),
@@ -372,26 +369,25 @@ public class PostService extends AbstractDbService {
     }
 
     public PostDataSet votePost(long postId, int vote) throws DbException {
-        stringBuilder.setLength(0);
+        String query;
         if (vote == 1) {
-            formatter.format("UPDATE IGNORE Post SET likes = likes + 1 WHERE id = %d;", postId);
+            query = format("UPDATE IGNORE Post SET likes = likes + 1 WHERE id = %d;", postId);
         } else if (vote == -1) {
-            formatter.format("UPDATE IGNORE Post SET dislikes = dislikes + 1 WHERE id = %d;", postId);
+            query = format("UPDATE IGNORE Post SET dislikes = dislikes + 1 WHERE id = %d;", postId);
         } else
             return null;
         //System.out.println(formatter.toString());
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0) {
+            if (executor.execUpdate(getConnection(), query) == 0) {
                 return null;
             }
         } catch (SQLException e) {
             throw new DbException("Unable to update vote for post!", e);
         }
 
-        stringBuilder.setLength(0);
-        formatter.format("SELECT * FROM Post WHERE id = %d", postId);
+        query = format("SELECT * FROM Post WHERE id = %d", postId);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),

@@ -18,9 +18,9 @@ public class UserDataSet {
     public UserDataSet(long id, String email, String username, String about, String name, boolean isAnonymous) {
         this.id = id;
         this.email = email;
-        this.username = username.equals("null") ? null : username;
-        this.about = about.equals("null") ? null : about;
-        this.name = name.equals("null") ? null : name;
+        this.username = username;
+        this.about = about;
+        this.name = name;
         this.isAnonymous = isAnonymous;
     }
 

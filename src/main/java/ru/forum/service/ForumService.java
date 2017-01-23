@@ -6,6 +6,7 @@ import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
+import ru.forum.helper.QueryHelper;
 import ru.forum.model.dataset.ForumDataSet;
 import ru.forum.model.dataset.ThreadDataSet;
 import ru.forum.model.full.ForumFull;
@@ -32,20 +33,20 @@ public class ForumService extends AbstractDbService {
     }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("INSERT IGNORE INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
+        String query = QueryHelper.format("INSERT IGNORE INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
                 name, shortName, user);
+        //System.out.println(formatter.toString());
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+            if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
         } catch (SQLException e) {
+            //System.out.println(formatter.toString());
             throw new DbException("Unable to create forum!", e);
         }
 
-        stringBuilder.setLength(0);
-        formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
+        query = QueryHelper.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                         resultSet.next();
                         return new ForumDataSet(
                                 resultSet.getLong("id"),
@@ -55,16 +56,16 @@ public class ForumService extends AbstractDbService {
                     }
             );
         } catch (SQLException e) {
+            //System.out.println(formatter.toString());
             throw new DbException("Unable to get forum after create!", e);
         }
     }
 
     //Get forum short info
     public ForumDataSet getForum(String shortName) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
+        final String query = QueryHelper.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
                 return new ForumDataSet(
                         resultSet.getLong("id"),

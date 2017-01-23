@@ -23,13 +23,9 @@ public abstract class AbstractDbService {
 
     protected Connection dbConnection;
 
-    protected StringBuilder stringBuilder;
-    protected Formatter formatter;
     protected Executor executor;
 
     public AbstractDbService() throws DbException {
-        stringBuilder = new StringBuilder();
-        formatter = new Formatter(stringBuilder, Locale.US);
         executor = new Executor();
     }
 

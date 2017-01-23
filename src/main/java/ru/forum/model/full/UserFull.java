@@ -23,9 +23,9 @@ public class UserFull {
                     String followers, String following, String subscriptions) {
         this.id = id;
         this.email = email;
-        this.username = username.equals("null") ? null : username;
-        this.about = about.equals("null") ? null : about;
-        this.name = name.equals("null") ? null : name;
+        this.username = username;
+        this.about = about;
+        this.name = name;
         this.isAnonymous = isAnonymous;
         if (followers != null) {
             final String[] followersSplit = followers.split(",");

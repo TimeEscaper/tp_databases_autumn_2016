@@ -15,6 +15,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ru.forum.helper.QueryHelper.format;
+
 @SuppressWarnings({"unused", "resource", "MalformedFormatString", "Duplicates"})
 @Service
 public class UserService extends AbstractDbService {
@@ -32,15 +34,17 @@ public class UserService extends AbstractDbService {
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {
 
-        stringBuilder.setLength(0);
-        formatter.format("INSERT IGNORE INTO User(email, username, name, about, isAnonymous) VALUES ('%s','%s','%s','%s','%d');",
-                email, username, name, about, isAnonymous ? 1 : 0);
+        String query;
+        if (isAnonymous)
+            query = format("INSERT IGNORE INTO User(email, isAnonymous) VALUES ('%s',1);", email);
+        else
+            query = format("INSERT IGNORE INTO User(email, username, name, about, isAnonymous) VALUES ('%s','%s','%s','%s',0);",
+                email, username, name, about);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+            if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
-            stringBuilder.setLength(0);
-            formatter.format("SELECT * FROM User WHERE email = '%s';", email);
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            query = format("SELECT * FROM User WHERE email = '%s';", email);
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
                 return new UserDataSet(
                         resultSet.getLong("id"),
@@ -51,14 +55,14 @@ public class UserService extends AbstractDbService {
                         resultSet.getBoolean("isAnonymous"));
             });
         } catch (SQLException e) {
+            //System.out.println(formatter.toString());
             throw new DbException("Unable to add user!", e);
         }
     }
 
 
     public UserFull getUserDetails(String email) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
+        final String query = format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
                 "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
                 "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
                 "FROM User " +
@@ -68,7 +72,7 @@ public class UserService extends AbstractDbService {
                 "WHERE User.email='%s' GROUP BY  User.id;", email);
         //System.out.println(formatter.toString());
         try {
-            return executor.execQuery(getConnection(), formatter.toString(), resultSet -> {
+            return executor.execQuery(getConnection(), query, resultSet -> {
                 if (!resultSet.next())
                     return null;
                 return new UserFull(
@@ -135,10 +139,9 @@ public class UserService extends AbstractDbService {
 
     //TODO: user existance
     public UserFull followUser(String follower, String followee) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("INSERT IGNORE INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
+        final String query = format("INSERT IGNORE INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
         try {
-            executor.execUpdate(getConnection(), formatter.toString());
+            executor.execUpdate(getConnection(), query);
             return getUserDetails(follower);
         } catch (SQLException e) {
             throw new DbException("Unable to follow user!", e);
@@ -146,10 +149,9 @@ public class UserService extends AbstractDbService {
     }
 
     public UserFull unfollowUser(String follower, String followee) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("DELETE IGNORE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
+        final String query = format("DELETE IGNORE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
         try {
-            executor.execUpdate(getConnection(), formatter.toString());
+            executor.execUpdate(getConnection(), query);
             return getUserDetails(follower);
         } catch (SQLException e) {
             throw new DbException("Unable to unfollow user!", e);
@@ -243,10 +245,9 @@ public class UserService extends AbstractDbService {
     }
 
     public UserFull updateUser(String user, String about, String name) throws DbException {
-        stringBuilder.setLength(0);
-        formatter.format("UPDATE IGNORE User SET about='%s', name='%s' WHERE email = '%s';", about, name, user);
+        final String query = format("UPDATE IGNORE User SET about='%s', name='%s' WHERE email = '%s';", about, name, user);
         try {
-            if (executor.execUpdate(getConnection(), formatter.toString()) == 0)
+            if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
             return getUserDetails(user);
         } catch (SQLException e) {
