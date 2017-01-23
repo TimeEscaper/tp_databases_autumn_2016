@@ -36,7 +36,7 @@ public class ThreadService extends AbstractDbService {
     public ThreadDataSet createThread(String forum, String title, String user, String date, String message,
                                       String slug, boolean isClosed, boolean isDeleted) throws DbException {
 
-        String query = format("INSERT INTO Thread(forum,title,user,date,message,slug,isClosed,isDeleted) " +
+        String query = format("INSERT IGNORE INTO Thread(forum,title,user,date,message,slug,isClosed,isDeleted) " +
                 "VALUES('%s','%s','%s','%s','%s','%s','%d','%d');", forum, title, user, date, message, slug,
                 isClosed ? 1 : 0, isDeleted ? 1 : 0);
         try {
@@ -85,11 +85,13 @@ public class ThreadService extends AbstractDbService {
         final boolean containsForum = related.contains("forum");
 
         String postfix = " WHERE Thread.id = " + Long.toString(threadId);
+        postfix += " GROUP BY ";
+        String group = " Thread.id;";
+        if (containsForum)
+            group = " Forum.id, " + group;
         if (containsUser)
-            postfix += " GROUP BY User.id";
-        if (containsUser && containsForum)
-            postfix += " ,Forum.id";
-        postfix += ';';
+            group = " User.id, " + group;
+        postfix += group;
 
         final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts ");
         final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");

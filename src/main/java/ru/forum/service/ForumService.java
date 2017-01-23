@@ -103,7 +103,8 @@ public class ForumService extends AbstractDbService {
         try {
             return executor.execQuery(getConnection(), query,
                     resultSet -> {
-                        resultSet.next();
+                        if (!resultSet.next())
+                            return null;
                         //System.out.println(resultSet.getString("Forum.name"));
                         final ForumFull result = new ForumFull(
                                 resultSet.getLong("Forum.id"),

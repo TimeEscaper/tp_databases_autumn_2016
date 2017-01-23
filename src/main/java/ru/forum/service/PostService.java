@@ -118,11 +118,16 @@ public class PostService extends AbstractDbService {
     public PostFull postDetails(long postId, List<String> related) throws DbException {
 
         String postfix = " WHERE Post.id = " + Long.toString(postId);
+        postfix += " GROUP BY ";
+        String group = " Post.id;";
+
+        if (related.contains("forum"))
+            group = " Forum.id, " + group;
+        if (related.contains("thread"))
+            group = " Thread.id, " + group;
         if (related.contains("user"))
-            postfix += " GROUP BY User.id";
-        if (related.contains("user") && related.contains("forum"))
-            postfix += ",Forum.id";
-        postfix += ';';
+            group = " User.id, " + group;
+        postfix += group;
 
         final StringBuilder tables = new StringBuilder("SELECT Post.*");
         final StringBuilder joins = new StringBuilder(" FROM Post");

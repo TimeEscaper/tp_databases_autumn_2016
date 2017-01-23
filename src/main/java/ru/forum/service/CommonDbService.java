@@ -28,16 +28,34 @@ public class CommonDbService  extends AbstractDbService{
 
     public DbStatus getStatus() throws DbException {
         try {
-            final String query = "SELECT COUNT(User.*) AS users, COUNT(Thread.*) AS threads, COUNT(Forum.*) AS forums, " +
-                    "COUNT(Post.*) AS posts FROM User,Thread,Forum,Post;";
-            return executor.execQuery(getConnection(), query, resultSet -> new DbStatus(
-                    resultSet.getLong("users"),
-                    resultSet.getLong("threads"),
-                    resultSet.getLong("forums"),
-                    resultSet.getLong("posts")
-            ));
+            String query = "SELECT COUNT(*) AS users FROM User;";
+            final long users = executor.execQuery(getConnection(), query, resultSet -> {
+                resultSet.next();
+                return resultSet.getLong("users");
+            });
+
+            query = "SELECT COUNT(*) AS forums FROM Forum;";
+            final long forums = executor.execQuery(getConnection(), query, resultSet -> {
+                resultSet.next();
+                return resultSet.getLong("forums");
+            });
+
+            query = "SELECT COUNT(*) AS threads FROM Thread;";
+            final long threads = executor.execQuery(getConnection(), query, resultSet -> {
+                resultSet.next();
+                return resultSet.getLong("threads");
+            });
+
+            query = "SELECT COUNT(*) AS posts FROM Post;";
+            final long posts = executor.execQuery(getConnection(), query, resultSet -> {
+                resultSet.next();
+                return resultSet.getLong("posts");
+            });
+
+            return new DbStatus(users, threads, forums, posts);
+
         } catch (SQLException e) {
-            throw new DbException("Unable to get database status!", e);
+            throw new DbException("Ubable to get database status!", e);
         }
     }
 
