@@ -6,7 +6,6 @@
 
     <groupId>ru.forum</groupId>
     <artifactId>forum-db-api</artifactId>
-    <version>1.0-SNAPSHOT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -83,7 +82,6 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <addClasspath>true</addClasspath>
                             <mainClass>ru.forum.Application</mainClass>
                         </manifest>
                     </archive>
