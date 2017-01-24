@@ -30,5 +30,11 @@ public class Executor {
         }
     }
 
+    public void execTruncate(Connection connection, String sqlTruncate) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sqlTruncate);
+        }
+    }
+
 
 }

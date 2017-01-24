@@ -61,14 +61,14 @@ public class CommonDbService  extends AbstractDbService{
 
     public void truncateAll() throws DbException {
         try {
-            executor.execUpdate(getConnection(), "SET FOREIGN_KEY_CHECKS=0;");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE User;");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE Forum");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE Thread");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE Post;");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE Follow;");
-            executor.execUpdate(getConnection(), "TRUNCATE TABLE Subscription;");
-            executor.execUpdate(getConnection(), "SET FOREIGN_KEY_CHECKS=1;");
+            executor.execTruncate(getConnection(), "SET FOREIGN_KEY_CHECKS=0;");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE User;");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE Forum");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE Thread");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE Post;");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE Follow;");
+            executor.execTruncate(getConnection(), "TRUNCATE TABLE Subscription;");
+            executor.execTruncate(getConnection(), "SET FOREIGN_KEY_CHECKS=1;");
         } catch (SQLException e) {
             throw new DbException("Unable to truncate table!", e);
         }
