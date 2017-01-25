@@ -31,6 +31,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/create/", method = RequestMethod.POST)
     public ResponseEntity createPost(@RequestBody CreatePostRequest request) {
+        System.out.print("receive");
         try {
             final PostDataSet post = postService.createPost(request.getDate(), request.getThread(), request.getMessage(),
                     request.getUser(), request.getForum(), request.getParent(), request.isApproved(),
@@ -49,6 +50,7 @@ public class PostController {
     @RequestMapping(path = "/db/api/post/details/", method = RequestMethod.GET)
     public ResponseEntity threadDetails(@RequestParam(value = "post") int postId,
                                         @RequestParam(value = "related", required = false) String[] related) {
+        System.out.print("receive");
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -69,6 +71,7 @@ public class PostController {
                                            @RequestParam(value = "limit", required = false) Integer limit,
                                            @RequestParam(value = "order", required = false) String order,
                                            @RequestParam(value = "since", required = false) String since) {
+        System.out.print("receive");
         if (forum == null) {
             try {
                 final ArrayList<PostFull> list = postService.listPostsByThread(threadId, since, limit, order);
@@ -91,6 +94,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/remove/", method = RequestMethod.POST)
     public ResponseEntity removeThread(@RequestBody PostRequest request) {
+        System.out.print("receive");
         try {
             if (postService.removePost(request.getPost()))
                 return ResponseEntity.ok(new Response<>(0, request));
@@ -103,6 +107,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/restore/", method = RequestMethod.POST)
     public ResponseEntity restoreThread(@RequestBody PostRequest request) {
+        System.out.print("receive");
         try {
             if (postService.restorePost(request.getPost()))
                 return ResponseEntity.ok(new Response<>(0, request));
@@ -115,6 +120,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/update/", method = RequestMethod.POST)
     public ResponseEntity updateThread(@RequestBody UpdatePostRequest request) {
+        System.out.print("receive");
         try {
             final PostDataSet post = postService.updatePost(request.getPost(), request.getMessage());
             if (post == null)
@@ -128,6 +134,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/vote/", method = RequestMethod.POST)
     public ResponseEntity voteThread(@RequestBody VotePostRequest request) {
+        System.out.print("receive");
         try {
             final PostDataSet post = postService.votePost(request.getPost(), request.getVote());
             if (post == null)

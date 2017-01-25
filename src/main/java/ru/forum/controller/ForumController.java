@@ -32,6 +32,7 @@ public class ForumController {
 
     @RequestMapping(path = "/db/api/forum/create/", method = RequestMethod.POST, consumes = "application/json;charset=UTF-8")
     public ResponseEntity createForum(@RequestBody CreateForumRequest request) {
+        System.out.print("receive");
         try {
             final ForumDataSet forum = forumService.createForum(request.getName(), request.getShortName(), request.getUser());
             if (forum == null)
@@ -46,6 +47,7 @@ public class ForumController {
     @RequestMapping(path = "/db/api/forum/details/", method = RequestMethod.GET)
     public ResponseEntity forumDetails(@RequestParam(value = "forum") String shortName,
                                        @RequestParam(value = "related", required = false) String related) {
+        System.out.print("receive");
         final String user = related == null ? null : related;
         try {
             final ForumFull forum = forumService.forumDetails(shortName, user);
@@ -64,6 +66,7 @@ public class ForumController {
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since,
                                     @RequestParam(value = "related", required = false) String[] related) {
+        System.out.print("receive");
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -82,6 +85,7 @@ public class ForumController {
                                     @RequestParam(value = "order", required = false) String order,
                                     @RequestParam(value = "since", required = false) String since,
                                     @RequestParam(value = "related", required = false) String[] related) {
+        System.out.print("receive");
         final ArrayList<String> relatedList = new ArrayList<>();
         if (related != null)
             Collections.addAll(relatedList, related);
@@ -99,6 +103,7 @@ public class ForumController {
                                       @RequestParam(value = "limit", required = false) Integer limit,
                                       @RequestParam(value = "order", required = false) String order,
                                       @RequestParam(value = "since_id", required = false) Integer since) {
+        System.out.print("receive");
         try {
             final List<UserFull> list = forumService.listUsers(shortName, since, limit, order);
             return ResponseEntity.ok(new Response<>(0, list));
