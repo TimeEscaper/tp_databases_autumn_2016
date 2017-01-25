@@ -79,7 +79,7 @@ CREATE TABLE `Post` (
   KEY `thread` (`thread`),
   KEY `forum` (`forum`),
   KEY `user` (`user`)
-) ENGINE=InnoDB AUTO_INCREMENT=280 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -118,6 +118,7 @@ CREATE TABLE `Thread` (
   `forum` varchar(127) NOT NULL,
   `likes` bigint(20) NOT NULL DEFAULT '0',
   `dislikes` bigint(20) NOT NULL DEFAULT '0',
+  `posts` bigint(20) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `Thread_Forum_short_name_fk` (`forum`),
@@ -142,7 +143,7 @@ CREATE TABLE `User` (
   `isAnonymous` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=262 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -154,4 +155,4 @@ CREATE TABLE `User` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-01-24 11:48:32
+-- Dump completed on 2017-01-25 13:16:20
