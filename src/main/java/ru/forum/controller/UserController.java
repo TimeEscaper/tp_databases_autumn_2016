@@ -32,7 +32,7 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/create/", method = RequestMethod.POST, consumes = "application/json")
     public ResponseEntity createUser(@RequestBody CreateUserRequest request) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/create/");
         try {
             final UserDataSet user = userService.createUser(request.getUsername(), request.getAbout(), request.getName(),
                     request.getEmail(), request.isAnonymous());
@@ -47,7 +47,7 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/details/", method = RequestMethod.GET)
     public ResponseEntity userDetails(@RequestParam(value = "user") String email) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/details/");
         try {
             final UserFull user = userService.getUserDetails(email);
             if (user == null)
@@ -61,7 +61,7 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/follow/", method = RequestMethod.POST)
     public ResponseEntity followUser(@RequestBody FollowUserRequest request) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/follow/");
         try {
             final UserFull user = userService.followUser(request.getFollower(), request.getFollowee());
             if (user == null)
@@ -75,7 +75,7 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/unfollow/", method = RequestMethod.POST)
     public ResponseEntity unfollowUser(@RequestBody FollowUserRequest request) {
-        System.out.println("Request");
+        System.out.println( "/db/api/user/unfollow/");
         try {
             final UserFull user = userService.unfollowUser(request.getFollower(), request.getFollowee());
             if (user == null)
@@ -92,7 +92,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/listFollowers/");
         try {
             final List<UserFull> followers = userService.listFollowers(email, limit, order, sinceId);
             return ResponseEntity.ok(new Response<>(0, followers));
@@ -107,7 +107,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
                                         @RequestParam(value = "since_id", required = false) Integer sinceId) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/listFollowing/");
         try {
             final List<UserFull> followings = userService.listFollowing(email, limit, order, sinceId);
             return ResponseEntity.ok(new Response<>(0, followings));
@@ -122,7 +122,7 @@ public class UserController {
                                         @RequestParam(value = "limit", required = false) Integer limit,
                                         @RequestParam(value = "order", required = false) String order,
                                         @RequestParam(value = "since", required = false) String since) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/listPosts/");
         try {
             final List<PostFull> posts = userService.listPosts(email, since, limit, order);
             return ResponseEntity.ok(new Response<>(0, posts));
@@ -135,7 +135,7 @@ public class UserController {
 
     @RequestMapping(path = "/db/api/user/updateProfile/", method = RequestMethod.POST)
     public ResponseEntity updateUser(@RequestBody UpdateUserRequest request) {
-        System.out.println("Request");
+        System.out.println("/db/api/user/updateProfile/");
         try {
             final UserFull user = userService.updateUser(request.getUser(), request.getAbout(), request.getName());
             if (user == null)

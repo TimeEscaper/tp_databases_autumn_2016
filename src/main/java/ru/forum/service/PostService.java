@@ -4,6 +4,7 @@ package ru.forum.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
@@ -22,7 +23,7 @@ import static ru.forum.helper.Base65.makePath;
 import static ru.forum.helper.QueryHelper.format;
 
 @SuppressWarnings({"Duplicates", "unused", "SwitchStatementWithoutDefaultBranch", "OverlyComplexMethod"})
-@Service
+@Component
 public class PostService extends AbstractDbService {
 
     private UserService userService;

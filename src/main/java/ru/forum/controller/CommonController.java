@@ -24,7 +24,7 @@ public class CommonController {
 
     @RequestMapping(path = "/db/api/clear/", method = RequestMethod.POST)
     public ResponseEntity clearDatabase() {
-        System.out.println("Request");
+        System.out.println("/db/api/clear/");
         try {
             commonDbService.truncateAll();
             return ResponseEntity.ok(new Response<>(0, "OK"));
@@ -36,7 +36,7 @@ public class CommonController {
 
     @RequestMapping(path = "/db/api/status/", method = RequestMethod.GET)
     public ResponseEntity getStatus() {
-        System.out.println("Request");
+        System.out.println("/db/api/status/");
         try {
             final DbStatus dbStatus = commonDbService.getStatus();
             return ResponseEntity.ok(new Response<>(0, dbStatus));

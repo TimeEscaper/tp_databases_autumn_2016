@@ -14,7 +14,7 @@ public class Executor {
     public<T> T execQuery(Connection connection, String sqlQuery, IResultHandler<T> resultHandler)
             throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            System.out.println(sqlQuery);
+            //System.out.println(sqlQuery);
             statement.execute(sqlQuery);
             try (ResultSet resultSet = statement.getResultSet()) {
                 final T result = resultHandler.handle(resultSet);
@@ -27,14 +27,14 @@ public class Executor {
 
     public int execUpdate(Connection connection, String sqlUpdate) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            System.out.println(sqlUpdate);
+            //System.out.println(sqlUpdate);
             return statement.executeUpdate(sqlUpdate);
         }
     }
 
     public void execTruncate(Connection connection, String sqlTruncate) throws SQLException {
         try (Statement statement = connection.createStatement()) {
-            System.out.println(sqlTruncate);
+            //System.out.println(sqlTruncate);
             statement.execute(sqlTruncate);
         }
     }
