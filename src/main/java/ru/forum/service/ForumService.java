@@ -171,9 +171,8 @@ public class ForumService extends AbstractDbService {
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name) ");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(DISTINCT Tpost.id) AS posts");
-                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
-                            "LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
+                    tables.append(" , Thread.* ");
+                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) ");
                     break;
                 case "user":
                     tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -246,7 +245,7 @@ public class ForumService extends AbstractDbService {
                                         resultSet.getBoolean("Thread.isDeleted"),
                                         resultSet.getLong("Thread.likes"),
                                         resultSet.getLong("Thread.dislikes"),
-                                        resultSet.getLong("posts")
+                                        resultSet.getLong("Thread.posts")
                                 ));
                             } else {
                                 post.setThread(resultSet.getLong("Post.thread"));
@@ -285,8 +284,8 @@ public class ForumService extends AbstractDbService {
         postfix += ";";
 
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts ");
-        final StringBuilder joins = new StringBuilder(" FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.* ");
+        final StringBuilder joins = new StringBuilder(" FROM Thread ");
 
         for (String table : related) {
             if (table.equals("forum")) {
@@ -320,7 +319,7 @@ public class ForumService extends AbstractDbService {
                                     resultSet.getBoolean("Thread.isDeleted"),
                                     resultSet.getLong("Thread.likes"),
                                     resultSet.getLong("Thread.dislikes"),
-                                    resultSet.getLong("posts")
+                                    resultSet.getLong("Thread.posts")
                             );
 
                             if (related.contains("user")) {

@@ -93,8 +93,8 @@ public class ThreadService extends AbstractDbService {
             group = " User.id, " + group;
         postfix += group;
 
-        final StringBuilder tables = new StringBuilder("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts ");
-        final StringBuilder joins = new StringBuilder("FROM Thread LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0)");
+        final StringBuilder tables = new StringBuilder("SELECT Thread.* ");
+        final StringBuilder joins = new StringBuilder(" FROM Thread ");
 
         if (containsUser) {
             tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -128,7 +128,7 @@ public class ThreadService extends AbstractDbService {
                                 resultSet.getBoolean("Thread.isDeleted"),
                                 resultSet.getLong("Thread.likes"),
                                 resultSet.getLong("Thread.dislikes"),
-                                resultSet.getLong("posts")
+                                resultSet.getLong("Thread.posts")
                         );
 
                         if (containsUser) {
@@ -186,8 +186,7 @@ public class ThreadService extends AbstractDbService {
             postfix += " LIMIT " + limit.toString();
         postfix += ";";
 
-        final String query = "SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
-                "ON(Tpost.thread=Thread.id AND Tpost.isDeleted=0) " + postfix;
+        final String query = "SELECT Thread.* From Thread "  + postfix;
         //System.out.println(query);
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
@@ -226,7 +225,7 @@ public class ThreadService extends AbstractDbService {
     }
 
     public boolean removeThread(long threadId) throws DbException {
-        String query = format("UPDATE IGNORE Thread SET isDeleted=1 WHERE id = %d;", threadId);
+        String query = format("UPDATE IGNORE Thread SET isDeleted=1, posts=0 WHERE id = %d;", threadId);
         try {
             if (executor.execUpdate(getConnection(), query) == 0)
                 return false;
@@ -242,7 +241,8 @@ public class ThreadService extends AbstractDbService {
     }
 
     public boolean restoreThread(long threadId) throws DbException {
-        String query = format("UPDATE IGNORE Thread SET isDeleted=0 WHERE id = %d;", threadId);
+        String query = format("UPDATE IGNORE Thread SET isDeleted=0, posts=(SELECT COUNT(id) FROM Post " +
+                "WHERE thread=%d) WHERE id = %d;", threadId, threadId);
         try {
             if (executor.execUpdate(getConnection(), query) == 0)
                 return false;
@@ -291,8 +291,7 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update thread!", e);
         }
-        query = format("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
+        query = format("SELECT * FROM Thread WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
@@ -333,8 +332,7 @@ public class ThreadService extends AbstractDbService {
         } catch (SQLException e) {
             throw new DbException("Unable to update vote for thread!", e);
         }
-        query = format("SELECT Thread.*, COUNT(DISTINCT Tpost.id) AS posts FROM Thread LEFT JOIN Post AS Tpost " +
-                "ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) WHERE Thread.id = %d;", threadId);
+        query = format("SELECT * FROM Thread WHERE Thread.id = %d;", threadId);
         try {
             return executor.execQuery(getConnection(), query, resultSet -> {
                 resultSet.next();
@@ -362,13 +360,6 @@ public class ThreadService extends AbstractDbService {
     public ArrayList<PostDataSet> listPosts(long threadId, String since, Integer limit, String order, String sort)
         throws DbException {
 
-        /*String query = "SELECT * FORM Post WHERE thread = " + Long.toString(threadId);
-        if (since != null)
-            query += " AND date >= " + since;
-        if (sort == null)
-            sort = "flat";
-        if (sort.equals("flat"))
-            query += " ORDER BY date " + ((order == null) ? "DESC" : sort); */
         if ((sort == null) || (sort.equals("flat"))) {
             String query = "SELECT * FROM Post WHERE thread = " + Long.toString(threadId);
             if (since != null)

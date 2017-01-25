@@ -58,6 +58,15 @@ public class PostService extends AbstractDbService {
             throw new DbException("Unable to create post!", e);
         }
 
+        query = format("UPDATE IGNORE Thread SET posts=posts+1 WHERE id=%d;", thread);
+        try {
+            if (executor.execUpdate(getConnection(), query) == 0)
+                return null;
+        } catch (SQLException e) {
+            System.out.println(query);
+            throw new DbException("Unable to create post!", e);
+        }
+
         query = format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
         final PostDataSet post;
         try {
@@ -139,9 +148,8 @@ public class PostService extends AbstractDbService {
                     joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
                     break;
                 case "thread":
-                    tables.append(" , Thread.*, COUNT(DISTINCT Tpost.id) AS posts");
-                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) " +
-                            "  LEFT JOIN Post AS Tpost ON(Thread.id=Tpost.thread AND Tpost.isDeleted=0) ");
+                    tables.append(" , Thread.* ");
+                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) ");
                     break;
                 case "user":
                     tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
@@ -214,7 +222,7 @@ public class PostService extends AbstractDbService {
                                     resultSet.getBoolean("Thread.isDeleted"),
                                     resultSet.getLong("Thread.likes"),
                                     resultSet.getLong("Thread.dislikes"),
-                                    resultSet.getLong("posts")
+                                    resultSet.getLong("Thread.posts")
                             ));
                         } else {
                             post.setThread(resultSet.getLong("Post.thread"));
@@ -321,8 +329,18 @@ public class PostService extends AbstractDbService {
     }
 
     public boolean removePost(long postId) throws DbException {
-        final String query = format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
+        String query = format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
         //System.out.println(formatter.toString());
+        //System.out.println(query);
+        try {
+            if (executor.execUpdate(getConnection(), query) == 0)
+                return false;
+        } catch (SQLException e) {
+            throw new DbException("Unable to remove post!", e);
+        }
+
+        query = format("UPDATE IGNORE Thread SET posts=posts-1 WHERE id=(SELECT thread FROM Post WHERE id= %d );", postId);
+        //System.out.println(query);
         try {
             return executor.execUpdate(getConnection(), query) != 0;
         } catch (SQLException e) {
@@ -331,7 +349,15 @@ public class PostService extends AbstractDbService {
     }
 
     public boolean restorePost(long postId) throws DbException {
-        final String query = format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
+        String query = format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
+        try {
+            if (executor.execUpdate(getConnection(), query) == 0)
+                return false;
+        } catch (SQLException e) {
+            throw new DbException("Unable to restore post!", e);
+        }
+
+        query = format("UPDATE IGNORE Thread SET posts=posts+1 WHERE id=(SELECT thread FROM Post WHERE id= %d );", postId);
         try {
             return executor.execUpdate(getConnection(), query) != 0;
         } catch (SQLException e) {
