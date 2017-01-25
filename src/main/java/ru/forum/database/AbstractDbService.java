@@ -21,16 +21,18 @@ public abstract class AbstractDbService {
 
     protected DataSource dataSource;
 
-    protected Connection dbConnection;
-
     protected Executor executor;
 
     public AbstractDbService() throws DbException {
         executor = new Executor();
     }
 
-    protected Connection getConnection() {
-        return dbConnection;
+    protected Connection getConnection() throws DbException {
+        try {
+            return DataSourceUtils.getConnection(dataSource);
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DbException("Unable to get JDBC connection!", e);
+        }
     }
 
 }

@@ -17,6 +17,7 @@ import ru.forum.model.full.UserFull;
 
 import javax.jws.soap.SOAPBinding;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -30,19 +31,14 @@ public class ForumService extends AbstractDbService {
     public ForumService(DataSource dataSource, UserService userService) throws DbException {
         this.dataSource = dataSource;
         this.userService = userService;
-        try {
-            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DbException("Unable to get database connection!", e);
-        }
     }
 
     public ForumDataSet createForum(String name, String shortName, String user) throws DbException {
         String query = QueryHelper.format("INSERT IGNORE INTO Forum(name, short_name, user) VALUES('%s','%s','%s');",
                 name, shortName, user);
         //System.out.println(formatter.toString());
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try(Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
         } catch (SQLException e) {
             //System.out.println(formatter.toString());
@@ -50,8 +46,8 @@ public class ForumService extends AbstractDbService {
         }
 
         query = QueryHelper.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                         resultSet.next();
                         return new ForumDataSet(
                                 resultSet.getLong("id"),
@@ -69,8 +65,8 @@ public class ForumService extends AbstractDbService {
     //Get forum short info
     public ForumDataSet getForum(String shortName) throws DbException {
         final String query = QueryHelper.format("SELECT * FROM Forum WHERE short_name = '%s';", shortName);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try(Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new ForumDataSet(
                         resultSet.getLong("id"),
@@ -94,8 +90,8 @@ public class ForumService extends AbstractDbService {
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         if (!resultSet.next())
                             return null;
@@ -172,8 +168,8 @@ public class ForumService extends AbstractDbService {
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<PostFull> result = new ArrayList<>();
                         while (resultSet.next()) {
@@ -288,8 +284,8 @@ public class ForumService extends AbstractDbService {
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<ThreadFull> result = new ArrayList<>();
                         while (resultSet.next()) {
@@ -367,8 +363,8 @@ public class ForumService extends AbstractDbService {
                 "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
                 "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<UserFull> result = new ArrayList<>();
                         while (resultSet.next()) {

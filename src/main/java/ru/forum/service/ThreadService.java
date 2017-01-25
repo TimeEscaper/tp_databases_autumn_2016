@@ -16,6 +16,7 @@ import ru.forum.model.full.UserFull;
 
 import javax.jws.soap.SOAPBinding;
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
@@ -31,11 +32,6 @@ public class ThreadService extends AbstractDbService {
     public ThreadService(DataSource dataSource, UserService userService) throws DbException {
         this.dataSource = dataSource;
         this.userService = userService;
-        try {
-            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DbException("Unable to get database connection!", e);
-        }
     }
 
     public ThreadDataSet createThread(String forum, String title, String user, String date, String message,
@@ -44,8 +40,8 @@ public class ThreadService extends AbstractDbService {
         String query = format("INSERT IGNORE INTO Thread(forum,title,user,date,message,slug,isClosed,isDeleted) " +
                 "VALUES('%s','%s','%s','%s','%s','%s','%d','%d');", forum, title, user, date, message, slug,
                 isClosed ? 1 : 0, isDeleted ? 1 : 0);
-        try {
-            final int updated = executor.execUpdate(getConnection(), query);
+        try (Connection connection = getConnection()) {
+            final int updated = executor.execUpdate(connection, query);
             if (updated == 0) {
                 return null;
             }
@@ -55,8 +51,8 @@ public class ThreadService extends AbstractDbService {
 
         query = format("SELECT * FROM Thread WHERE forum = '%s' AND title = '%s' AND date = '%s';",
                 forum, title, date);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new ThreadDataSet(
                         resultSet.getLong("id"),
@@ -77,8 +73,8 @@ public class ThreadService extends AbstractDbService {
 
     public boolean closeThread(long threadId) throws DbException {
         final String query = format("UPDATE IGNORE Thread SET isClosed=1 WHERE id = %d;", threadId);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to close thread!", e);
         }
@@ -106,8 +102,8 @@ public class ThreadService extends AbstractDbService {
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         if (!resultSet.next())
                             return null;
@@ -126,7 +122,7 @@ public class ThreadService extends AbstractDbService {
                         );
 
                         if (containsUser) {
-                            UserFull userFull = userService.getUserFull(resultSet.getString("Thread.user"));
+                            final UserFull userFull = userService.getUserFull(resultSet.getString("Thread.user"));
                             result.setUser(userFull);
                         } else {
                             result.setUser(resultSet.getString("Thread.user"));
@@ -173,8 +169,8 @@ public class ThreadService extends AbstractDbService {
 
         final String query = "SELECT Thread.* From Thread "  + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 final ArrayList<ThreadDataSet> result = new ArrayList<>();
                 while (resultSet.next()) {
                     final ThreadDataSet thread = new ThreadDataSet(
@@ -202,8 +198,8 @@ public class ThreadService extends AbstractDbService {
 
     public boolean openThread(long threadId) throws DbException {
         final String query = format("UPDATE IGNORE Thread SET isClosed=0 WHERE id = %d;", threadId);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to open thread!", e);
         }
@@ -211,15 +207,15 @@ public class ThreadService extends AbstractDbService {
 
     public boolean removeThread(long threadId) throws DbException {
         String query = format("UPDATE IGNORE Thread SET isDeleted=1, posts=0 WHERE id = %d;", threadId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return false;
         } catch (SQLException e) {
             throw new DbException("Unable to remove thread!", e);
         }
         query = format("UPDATE IGNORE Post SET isDeleted=1 WHERE thread = %d;", threadId);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to remove posts!", e);
         }
@@ -228,15 +224,15 @@ public class ThreadService extends AbstractDbService {
     public boolean restoreThread(long threadId) throws DbException {
         String query = format("UPDATE IGNORE Thread SET isDeleted=0, posts=(SELECT COUNT(id) FROM Post " +
                 "WHERE thread=%d) WHERE id = %d;", threadId, threadId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return false;
         } catch (SQLException e) {
             throw new DbException("Unable to restore thread!", e);
         }
         query = format("UPDATE IGNORE Post SET isDeleted=0 WHERE thread = %d;", threadId);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to restore posts!", e);
         }
@@ -245,8 +241,8 @@ public class ThreadService extends AbstractDbService {
     //TODO: check if already subscribe (through DB schema or through query)
     public SubscriptionDataSet subscribeThread(String userId, long threadId) throws DbException {
         final String query = format("INSERT IGNORE INTO Subscription(thread, user) VALUES(%d, '%s');", threadId, userId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0) {
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0) {
                 return null;
             }
             return new SubscriptionDataSet(threadId, userId);
@@ -257,8 +253,8 @@ public class ThreadService extends AbstractDbService {
 
     public SubscriptionDataSet unsubscribeThread(String userId, long threadId) throws DbException {
         final String query = format("DELETE IGNORE From Subscription WHERE user = '%s' AND thread = %d;", userId, threadId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0) {
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0) {
                 return null;
             }
             return new SubscriptionDataSet(threadId, userId);
@@ -269,16 +265,16 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadDataSet updateThread(long threadId, String slug, String message) throws DbException {
         String query = format("UPDATE IGNORE Thread SET slug='%s', message='%s' WHERE id = %d;", slug, message, threadId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0) {
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0) {
                 return null;
             }
         } catch (SQLException e) {
             throw new DbException("Unable to update thread!", e);
         }
         query = format("SELECT * FROM Thread WHERE Thread.id = %d;", threadId);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new ThreadDataSet(
                         resultSet.getLong("id"),
@@ -310,16 +306,16 @@ public class ThreadService extends AbstractDbService {
         }
         else
             return null;
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0) {
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0) {
                 return null;
             }
         } catch (SQLException e) {
             throw new DbException("Unable to update vote for thread!", e);
         }
         query = format("SELECT * FROM Thread WHERE Thread.id = %d;", threadId);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new ThreadDataSet(
                         resultSet.getLong("id"),
@@ -353,8 +349,8 @@ public class ThreadService extends AbstractDbService {
             if (limit != null)
                 query += " LIMIT " + limit.toString();
             query += ';';
-            try {
-                return executor.execQuery(getConnection(), query, resultSet -> {
+            try (Connection connection = getConnection()) {
+                return executor.execQuery(connection, query, resultSet -> {
                     final ArrayList<PostDataSet> result = new ArrayList<>();
                     while (resultSet.next()) {
                         result.add(new PostDataSet(
@@ -387,8 +383,8 @@ public class ThreadService extends AbstractDbService {
             if (limit != null)
                 query += " LIMIT " + limit.toString();
             query += ';';
-            try {
-                return executor.execQuery(getConnection(), query, resultSet -> {
+            try (Connection connection = getConnection()) {
+                return executor.execQuery(connection, query, resultSet -> {
                     final ArrayList<PostDataSet> result = new ArrayList<>();
                     while (resultSet.next()) {
                         result.add(new PostDataSet(
@@ -420,8 +416,8 @@ public class ThreadService extends AbstractDbService {
             if (since != null)
                 query += " AND date >= '" + since + '\'';
             query += " ORDER BY root_parent " + ((order == null) ? "DESC" : order) + ", path;";
-            try {
-                return executor.execQuery(getConnection(), query, resultSet -> {
+            try (Connection connection = getConnection()) {
+                return executor.execQuery(connection, query, resultSet -> {
                     final ArrayList<PostDataSet> result = new ArrayList<>();
                     if (limit == null) {
                         while (resultSet.next()) {

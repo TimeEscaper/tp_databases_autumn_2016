@@ -26,50 +26,66 @@ public class UserService extends AbstractDbService {
     @Autowired
     public UserService(DataSource dataSource) throws DbException {
         this.dataSource = dataSource;
-        try {
-            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DbException("Unable to get database connection!", e);
-        }
     }
 
     public UserFull getUserFull(String email) throws SQLException {
         String query = "SELECT * FROM User WHERE email='" + email + "';";
-        Connection connection = DataSourceUtils.getConnection(dataSource);
+        final Connection connection = DataSourceUtils.getConnection(dataSource);
         final UserFull user;
-        user = executor.execQuery(connection, query, resultSet -> {
-            if (!resultSet.next())
-                return null;
-            return new UserFull(resultSet.getLong("id"),
-                    resultSet.getString("email"),
-                    resultSet.getString("username"),
-                    resultSet.getString("about"),
-                    resultSet.getString("name"),
-                    resultSet.getBoolean("isAnonymous"));
-        });
+        try {
+            user = executor.execQuery(connection, query, resultSet -> {
+                if (!resultSet.next())
+                    return null;
+                return new UserFull(resultSet.getLong("id"),
+                        resultSet.getString("email"),
+                        resultSet.getString("username"),
+                        resultSet.getString("about"),
+                        resultSet.getString("name"),
+                        resultSet.getBoolean("isAnonymous"));
+            });
+        } catch (SQLException e) {
+            connection.close();
+            throw e;
+        }
 
 
         query = "SELECT follower FROM Follow WHERE followee='" + email + "';";
-        executor.execQuery(connection, query, resultSet -> {
-             while (resultSet.next())
-                 user.addFollower(resultSet.getString("follower"));
-            return null;
-        });
+        try {
+            executor.execQuery(connection, query, resultSet -> {
+                while (resultSet.next())
+                    user.addFollower(resultSet.getString("follower"));
+                return null;
+            });
+        } catch (SQLException e) {
+            connection.close();
+            throw e;
+        }
 
         query = "SELECT followee FROM Follow WHERE follower='" + email + "';";
-        executor.execQuery(connection, query, resultSet -> {
-            while (resultSet.next())
-                user.addFollowee(resultSet.getString("followee"));
-            return null;
-        });
+        try {
+            executor.execQuery(connection, query, resultSet -> {
+                while (resultSet.next())
+                    user.addFollowee(resultSet.getString("followee"));
+                return null;
+            });
+        } catch (SQLException e) {
+            connection.close();
+            throw e;
+        }
 
         query = "SELECT thread FROM Subscription WHERE user='" + email + "';";
-        executor.execQuery(connection, query, resultSet -> {
-            while (resultSet.next())
-                user.addSubscription(resultSet.getLong("thread"));
-            return null;
-        });
+        try {
+            executor.execQuery(connection, query, resultSet -> {
+                while (resultSet.next())
+                    user.addSubscription(resultSet.getLong("thread"));
+                return null;
+            });
+        } catch (SQLException e) {
+            connection.close();
+            throw e;
+        }
 
+        connection.close();
         return user;
     }
 
@@ -82,8 +98,8 @@ public class UserService extends AbstractDbService {
         else
             query = format("INSERT IGNORE INTO User(email, username, name, about, isAnonymous) VALUES ('%s','%s','%s','%s',0);",
                     email, username, name, about);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
             query = format("SELECT * FROM User WHERE email = '%s';", email);
             return executor.execQuery(getConnection(), query, resultSet -> {
@@ -125,8 +141,8 @@ public class UserService extends AbstractDbService {
             query += " LIMIT " + limit.toString();
         query += ";";
 
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<PostFull> result = new ArrayList<>();
                         while (resultSet.next()) {
@@ -160,8 +176,8 @@ public class UserService extends AbstractDbService {
     //TODO: user existance
     public UserFull followUser(String follower, String followee) throws DbException {
         final String query = format("INSERT IGNORE INTO Follow (follower, followee) VALUES ('%s', '%s');", follower, followee);
-        try {
-            executor.execUpdate(getConnection(), query);
+        try (Connection connection = getConnection()) {
+            executor.execUpdate(connection, query);
             return getUserDetails(follower);
         } catch (SQLException e) {
             throw new DbException("Unable to follow user!", e);
@@ -170,8 +186,8 @@ public class UserService extends AbstractDbService {
 
     public UserFull unfollowUser(String follower, String followee) throws DbException {
         final String query = format("DELETE IGNORE FROM Follow WHERE follower = '%s' AND followee = '%s';", follower, followee);
-        try {
-            executor.execUpdate(getConnection(), query);
+        try (Connection connection = getConnection()) {
+            executor.execUpdate(connection, query);
             return getUserDetails(follower);
         } catch (SQLException e) {
             throw new DbException("Unable to unfollow user!", e);
@@ -199,8 +215,8 @@ public class UserService extends AbstractDbService {
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ';';
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
                     result.add(new UserFull(
@@ -242,8 +258,8 @@ public class UserService extends AbstractDbService {
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ';';
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
                     result.add(new UserFull(
@@ -266,8 +282,8 @@ public class UserService extends AbstractDbService {
 
     public UserFull updateUser(String user, String about, String name) throws DbException {
         final String query = format("UPDATE IGNORE User SET about='%s', name='%s' WHERE email = '%s';", about, name, user);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
             return getUserDetails(user);
         } catch (SQLException e) {

@@ -15,6 +15,7 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +33,6 @@ public class PostService extends AbstractDbService {
     public PostService(DataSource dataSource, UserService userService) throws DbException {
         this.dataSource = dataSource;
         this.userService = userService;
-        try {
-            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DbException("Unable to get database connection!", e);
-        }
     }
 
 
@@ -54,8 +50,8 @@ public class PostService extends AbstractDbService {
                             "isSpam,isDeleted) VALUES(%d,'%s','%s','%s','%s',%d,%d,%d,%d,%d);",
                     thread, forum, user, message, date, isApproved ? 1 : 0, isHighlighted ? 1 : 0, isEdited ? 1 : 0,
                     isSpam ? 1 : 0, isDeleted ? 1 : 0);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
         } catch (SQLException e) {
             System.out.println(query);
@@ -63,8 +59,8 @@ public class PostService extends AbstractDbService {
         }
 
         query = format("UPDATE IGNORE Thread SET posts=posts+1 WHERE id=%d;", thread);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
         } catch (SQLException e) {
             System.out.println(query);
@@ -73,8 +69,8 @@ public class PostService extends AbstractDbService {
 
         query = format("SELECT * FROM Post WHERE user='%s' AND thread=%d AND date='%s';", user, thread, date);
         final PostDataSet post;
-        try {
-            post = executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            post = executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),
@@ -101,8 +97,8 @@ public class PostService extends AbstractDbService {
             post.setPath(makePath(post.getId()));
         } else {
             final String queryParent = "SELECT root_parent,path FROM Post WHERE id=" + post.getParent().toString() + ';';
-            try {
-                executor.execQuery(getConnection(), queryParent, resultSet -> {
+            try (Connection connection = getConnection()) {
+                executor.execQuery(connection, queryParent, resultSet -> {
                     resultSet.next();
                     post.setRootParent(resultSet.getLong("root_parent"));
                     if (resultSet.getString("root_parent") != null)
@@ -116,10 +112,10 @@ public class PostService extends AbstractDbService {
             }
          }
 
-         try {
+         try (Connection connection = getConnection()) {
              final String update = "UPDATE IGNORE Post SET root_parent=" + post.getRootParent() + ", path='" +
                      post.getPath() + "' WHERE id=" + Long.toString(post.getId()) + ';';
-             if (executor.execUpdate(getConnection(), update) == 0)
+             if (executor.execUpdate(connection, update) == 0)
                  throw new DbException("Unable to update post, query:" + update, null);
          } catch (SQLException e) {
              throw new DbException("Unable to update post!", e);
@@ -158,8 +154,8 @@ public class PostService extends AbstractDbService {
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         if (!resultSet.next())
                             return null;
@@ -234,8 +230,8 @@ public class PostService extends AbstractDbService {
             query += " LIMIT " + limit.toString();
         query += ";";
         //System.out.println(query);
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<PostFull> result = new ArrayList<>();
                         while (resultSet.next()) {
@@ -280,8 +276,8 @@ public class PostService extends AbstractDbService {
             query += " LIMIT " + limit.toString();
         query += ";";
 
-        try {
-            return executor.execQuery(getConnection(), query,
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<PostFull> result = new ArrayList<>();
                         while (resultSet.next()) {
@@ -315,8 +311,8 @@ public class PostService extends AbstractDbService {
         String query = format("UPDATE IGNORE Post SET isDeleted=1 WHERE id = %d;", postId);
         //System.out.println(formatter.toString());
         //System.out.println(query);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return false;
         } catch (SQLException e) {
             throw new DbException("Unable to remove post!", e);
@@ -324,8 +320,8 @@ public class PostService extends AbstractDbService {
 
         query = format("UPDATE IGNORE Thread SET posts=posts-1 WHERE id=(SELECT thread FROM Post WHERE id= %d );", postId);
         //System.out.println(query);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to remove post!", e);
         }
@@ -333,16 +329,16 @@ public class PostService extends AbstractDbService {
 
     public boolean restorePost(long postId) throws DbException {
         String query = format("UPDATE IGNORE Post SET isDeleted=0 WHERE id = %d;", postId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return false;
         } catch (SQLException e) {
             throw new DbException("Unable to restore post!", e);
         }
 
         query = format("UPDATE IGNORE Thread SET posts=posts+1 WHERE id=(SELECT thread FROM Post WHERE id= %d );", postId);
-        try {
-            return executor.execUpdate(getConnection(), query) != 0;
+        try (Connection connection = getConnection()) {
+            return executor.execUpdate(connection, query) != 0;
         } catch (SQLException e) {
             throw new DbException("Unable to restore post!", e);
         }
@@ -350,16 +346,16 @@ public class PostService extends AbstractDbService {
 
     public PostDataSet updatePost(long postId, String message) throws DbException {
         String query = format("UPDATE IGNORE Post SET message='%s' WHERE id=%d;", message, postId);
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0)
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0)
                 return null;
         } catch (SQLException e) {
             throw new DbException("Unable to update post!", e);
         }
 
         query = format("SELECT * FROM Post WHERE id = %d", postId);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),
@@ -391,8 +387,8 @@ public class PostService extends AbstractDbService {
         } else
             return null;
         //System.out.println(formatter.toString());
-        try {
-            if (executor.execUpdate(getConnection(), query) == 0) {
+        try (Connection connection = getConnection()) {
+            if (executor.execUpdate(connection, query) == 0) {
                 return null;
             }
         } catch (SQLException e) {
@@ -400,8 +396,8 @@ public class PostService extends AbstractDbService {
         }
 
         query = format("SELECT * FROM Post WHERE id = %d", postId);
-        try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
+        try (Connection connection = getConnection()) {
+            return executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return new PostDataSet(
                         resultSet.getLong("id"),

@@ -11,6 +11,7 @@ import ru.forum.database.exception.DbException;
 import ru.forum.model.DbStatus;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 @SuppressWarnings("unused")
@@ -20,17 +21,12 @@ public class CommonDbService  extends AbstractDbService{
     @Autowired
     public CommonDbService(DataSource dataSource) throws DbException {
         this.dataSource = dataSource;
-        try {
-            this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
-        } catch (CannotGetJdbcConnectionException e) {
-            throw new DbException("Unable to get database connection!", e);
-        }
     }
 
     public DbStatus getStatus() throws DbException {
-        try {
+        try(Connection connection = getConnection()) {
             String query = "SELECT COUNT(*) AS users FROM User;";
-            final long users = executor.execQuery(getConnection(), query, resultSet -> {
+            final long users = executor.execQuery(connection, query, resultSet -> {
                 resultSet.next();
                 return resultSet.getLong("users");
             });
@@ -61,15 +57,15 @@ public class CommonDbService  extends AbstractDbService{
     }
 
     public void truncateAll() throws DbException {
-        try {
-            executor.execTruncate(getConnection(), "SET FOREIGN_KEY_CHECKS=0;");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE User;");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE Forum");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE Thread");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE Post;");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE Follow;");
-            executor.execTruncate(getConnection(), "TRUNCATE TABLE Subscription;");
-            executor.execTruncate(getConnection(), "SET FOREIGN_KEY_CHECKS=1;");
+        try(Connection connection = getConnection()) {
+            executor.execTruncate(connection, "SET FOREIGN_KEY_CHECKS=0;");
+            executor.execTruncate(connection, "TRUNCATE TABLE User;");
+            executor.execTruncate(connection, "TRUNCATE TABLE Forum");
+            executor.execTruncate(connection, "TRUNCATE TABLE Thread");
+            executor.execTruncate(connection, "TRUNCATE TABLE Post;");
+            executor.execTruncate(connection, "TRUNCATE TABLE Follow;");
+            executor.execTruncate(connection, "TRUNCATE TABLE Subscription;");
+            executor.execTruncate(connection, "SET FOREIGN_KEY_CHECKS=1;");
         } catch (SQLException e) {
             throw new DbException("Unable to truncate table!", e);
         }
