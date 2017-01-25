@@ -126,8 +126,6 @@ public class ForumService extends AbstractDbService {
             postfix += " AND Post.date >= '" + since + "\' ";
         }
         postfix += " GROUP BY ";
-        if (related.contains("user"))
-            postfix += "User.id,";
         if (related.contains("thread"))
             postfix += "Thread.id,";
         if (related.contains("forum"))
@@ -154,15 +152,6 @@ public class ForumService extends AbstractDbService {
                     tables.append(" , Thread.* ");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) ");
                     break;
-                case "user":
-                    tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                            "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                            "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-                    joins.append(" JOIN User ON(Post.user = User.email) " +
-                            "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                            "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                            "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
-                    break;
             }
         }
 
@@ -188,17 +177,7 @@ public class ForumService extends AbstractDbService {
                             );
 
                             if (related.contains("user")) {
-                                post.setUser(new UserFull(
-                                        resultSet.getLong("User.id"),
-                                        resultSet.getString("User.email"),
-                                        resultSet.getString("User.username"),
-                                        resultSet.getString("User.about"),
-                                        resultSet.getString("User.name"),
-                                        resultSet.getBoolean("User.isAnonymous"),
-                                        resultSet.getString("followers"),
-                                        resultSet.getString("followees"),
-                                        resultSet.getString("subscriptions")
-                                ));
+                                post.setUser(userService.getUserFull(resultSet.getString("Post.user")));
                             } else {
                                 post.setUser(resultSet.getString("Post.user"));
                             }
@@ -251,8 +230,6 @@ public class ForumService extends AbstractDbService {
         }
         postfix += " GROUP BY ";
         postfix += "Thread.id ";
-        if (related.contains("user"))
-            postfix += " ,User.id ";
         if (related.contains("forum"))
             postfix += " ,Forum.id ";
         if (order == null)
@@ -271,14 +248,6 @@ public class ForumService extends AbstractDbService {
             if (table.equals("forum")) {
                 tables.append(" , Forum.*");
                 joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
-            } else if (table.equals("user")) {
-                tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                        "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                        "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-                joins.append(" JOIN User ON(Thread.user = User.email) " +
-                        "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                        "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                        "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
             }
         }
 
@@ -303,16 +272,8 @@ public class ForumService extends AbstractDbService {
                             );
 
                             if (related.contains("user")) {
-                                thread.setUser(new UserFull(
-                                        resultSet.getLong("User.id"),
-                                        resultSet.getString("User.email"),
-                                        resultSet.getString("User.username"),
-                                        resultSet.getString("User.about"),
-                                        resultSet.getString("User.name"),
-                                        resultSet.getBoolean("User.isAnonymous"),
-                                        resultSet.getString("followers"),
-                                        resultSet.getString("followees"),
-                                        resultSet.getString("subscriptions")
+                                thread.setUser(userService.getUserFull(
+                                        resultSet.getString("Thread.user")
                                 ));
                             } else {
                                 thread.setUser(resultSet.getString("Thread.user"));
@@ -355,29 +316,14 @@ public class ForumService extends AbstractDbService {
         postfix += ";";
 
 
-        final String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
-                "FROM User " +
-                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " + postfix;
+        final String query = "SELECT User.email FROM User " + postfix;
         //System.out.println(query);
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<UserFull> result = new ArrayList<>();
                         while (resultSet.next()) {
-                            result.add(new UserFull(
-                                    resultSet.getLong("User.id"),
-                                    resultSet.getString("User.email"),
-                                    resultSet.getString("User.username"),
-                                    resultSet.getString("User.about"),
-                                    resultSet.getString("User.name"),
-                                    resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("followers"),
-                                    resultSet.getString("followees"),
-                                    resultSet.getString("subscriptions")));
+                            result.add(userService.getUserFull(resultSet.getString("User.email")));
                         }
 
                         return result;

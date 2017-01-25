@@ -196,15 +196,8 @@ public class UserService extends AbstractDbService {
 
     //TODO: check query
     public List<UserFull> listFollowers(String email, Integer limit, String order, Integer sinceId) throws DbException {
-        String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
-                "FROM User " +
-                "JOIN Follow AS UserFollowers ON (UserFollowers.followee = '" + email + "' " +
-                "AND User.email = UserFollowers.follower) " +
-                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
+        String query = "SELECT User.email FROM User JOIN Follow ON(Follow.followee='"
+                 + email + "' AND User.email=Follow.follower) ";
         if (sinceId != null)
             query += " WHERE User.id>=" + sinceId.toString();
         query += " GROUP BY User.id ORDER BY User.name ";
@@ -219,16 +212,7 @@ public class UserService extends AbstractDbService {
             return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
-                    result.add(new UserFull(
-                            resultSet.getLong("id"),
-                            resultSet.getString("email"),
-                            resultSet.getString("username"),
-                            resultSet.getString("about"),
-                            resultSet.getString("name"),
-                            resultSet.getBoolean("isAnonymous"),
-                            resultSet.getString("followers"),
-                            resultSet.getString("followees"),
-                            resultSet.getString("subscriptions")));
+                    result.add(getUserFull(resultSet.getString("User.email")));
                 }
                 return result;
             });
@@ -239,15 +223,8 @@ public class UserService extends AbstractDbService {
 
     //TODO: check query
     public List<UserFull> listFollowing(String email, Integer limit, String order, Integer sinceId) throws DbException {
-        String query = "SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
-                "FROM User " +
-                "JOIN Follow AS UserFollowers ON (UserFollowers.follower = '" + email + "' " +
-                "AND User.email = UserFollowers.followee) " +
-                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ";
+        String query = "SELECT User.email FROM User JOIN Follow ON(Follow.follower='"
+                + email + "' AND User.email=Follow.followee) ";
         if (sinceId != null)
             query += " WHERE User.id >= " + sinceId.toString();
         query += " GROUP BY User.id ORDER BY User.name ";
@@ -262,16 +239,7 @@ public class UserService extends AbstractDbService {
             return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
-                    result.add(new UserFull(
-                            resultSet.getLong("id"),
-                            resultSet.getString("email"),
-                            resultSet.getString("username"),
-                            resultSet.getString("about"),
-                            resultSet.getString("name"),
-                            resultSet.getBoolean("isAnonymous"),
-                            resultSet.getString("followers"),
-                            resultSet.getString("followees"),
-                            resultSet.getString("subscriptions")));
+                    result.add(getUserFull(resultSet.getString("User.email")));
                 }
                 return result;
             });
