@@ -25,9 +25,12 @@ import static ru.forum.helper.QueryHelper.format;
 @Service
 public class PostService extends AbstractDbService {
 
+    private UserService userService;
+
     @Autowired
-    public PostService(DataSource dataSource) throws DbException {
+    public PostService(DataSource dataSource, UserService userService) throws DbException {
         this.dataSource = dataSource;
+        this.userService = userService;
         try {
             this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
         } catch (CannotGetJdbcConnectionException e) {
@@ -134,8 +137,6 @@ public class PostService extends AbstractDbService {
             group = " Forum.id, " + group;
         if (related.contains("thread"))
             group = " Thread.id, " + group;
-        if (related.contains("user"))
-            group = " User.id, " + group;
         postfix += group;
 
         final StringBuilder tables = new StringBuilder("SELECT Post.*");
@@ -150,15 +151,6 @@ public class PostService extends AbstractDbService {
                 case "thread":
                     tables.append(" , Thread.* ");
                     joins.append(" JOIN Thread ON(Post.thread = Thread.id) ");
-                    break;
-                case "user":
-                    tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                            "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                            "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-                    joins.append(" JOIN User ON(Post.user = User.email) " +
-                            "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                            "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                            "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
                     break;
             }
         }
@@ -185,17 +177,7 @@ public class PostService extends AbstractDbService {
                         );
 
                         if (related.contains("user")) {
-                            post.setUser(new UserFull(
-                                    resultSet.getLong("User.id"),
-                                    resultSet.getString("User.email"),
-                                    resultSet.getString("User.username"),
-                                    resultSet.getString("User.about"),
-                                    resultSet.getString("User.name"),
-                                    resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("followers"),
-                                    resultSet.getString("followees"),
-                                    resultSet.getString("subscriptions")
-                            ));
+                            post.setUser(userService.getUserFull(resultSet.getString("Post.user")));
                         } else {
                             post.setUser(resultSet.getString("Post.user"));
                         }

@@ -14,6 +14,7 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.ThreadFull;
 import ru.forum.model.full.UserFull;
 
+import javax.jws.soap.SOAPBinding;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -22,9 +23,12 @@ import java.util.ArrayList;
 @Service
 public class ForumService extends AbstractDbService {
 
+    private UserService userService;
+
     @Autowired
-    public ForumService(DataSource dataSource) throws DbException {
+    public ForumService(DataSource dataSource, UserService userService) throws DbException {
         this.dataSource = dataSource;
+        this.userService = userService;
         try {
             this.dbConnection = DataSourceUtils.getConnection(this.dataSource);
         } catch (CannotGetJdbcConnectionException e) {
@@ -81,22 +85,11 @@ public class ForumService extends AbstractDbService {
     public ForumFull forumDetails(String forum, String user) throws DbException {
 
         String postfix = " WHERE Forum.short_name = '" + forum + '\'';
-        if (user != null)
-            postfix += " GROUP BY User.id, Forum.id";
         postfix += ';';
 
         final StringBuilder tables = new StringBuilder("SELECT Forum.* ");
         final StringBuilder joins = new StringBuilder("FROM Forum");
 
-        if (user != null) {
-            tables.append(" , User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                    "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                    "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions ");
-            joins.append(" JOIN User ON(Forum.user = User.email) " +
-                    "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                    "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                    "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) ");
-        }
 
         final String query = tables.toString() + joins + postfix;
         //System.out.println(query);
@@ -113,17 +106,7 @@ public class ForumService extends AbstractDbService {
                         );
 
                         if (user != null) {
-                            result.setUser(new UserFull(
-                                    resultSet.getLong("User.id"),
-                                    resultSet.getString("User.email"),
-                                    resultSet.getString("User.username"),
-                                    resultSet.getString("User.about"),
-                                    resultSet.getString("User.name"),
-                                    resultSet.getBoolean("User.isAnonymous"),
-                                    resultSet.getString("followers"),
-                                    resultSet.getString("followees"),
-                                    resultSet.getString("subscriptions")
-                            ));
+                            result.setUser(userService.getUserFull(resultSet.getString("Forum.user")));
                         } else {
                             result.setUser(resultSet.getString("Forum.user"));
                         }

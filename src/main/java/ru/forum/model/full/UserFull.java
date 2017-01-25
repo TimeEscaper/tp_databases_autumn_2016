@@ -19,6 +19,7 @@ public class UserFull {
     private List<String> following = new ArrayList<>();
     private List<Long> subscriptions = new ArrayList<>();
 
+
     public UserFull(long id, String email, String username, String about, String name, boolean isAnonymous,
                     String followers, String following, String subscriptions) {
         this.id = id;
@@ -40,6 +41,21 @@ public class UserFull {
             for (String str : split)
                 this.subscriptions.add(Long.parseLong(str));
         }
+    }
+
+    public void addFollower(String follower) { followers.add(follower); }
+
+    public void addFollowee(String followee) { following.add(followee); }
+
+    public void addSubscription(Long thread) { subscriptions.add(thread); }
+
+    public UserFull(long id, String email, String username, String about, String name, boolean isAnonymous) {
+        this.id = id;
+        this.email = email;
+        this.username = username;
+        this.about = about;
+        this.name = name;
+        this.isAnonymous = isAnonymous;
     }
 
     public long getId() {

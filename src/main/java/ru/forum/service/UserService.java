@@ -3,7 +3,7 @@ package ru.forum.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.datasource.DataSourceUtils;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import ru.forum.database.AbstractDbService;
 import ru.forum.database.exception.DbException;
 import ru.forum.model.dataset.UserDataSet;
@@ -11,6 +11,8 @@ import ru.forum.model.full.PostFull;
 import ru.forum.model.full.UserFull;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ import java.util.List;
 import static ru.forum.helper.QueryHelper.format;
 
 @SuppressWarnings({"unused", "resource", "MalformedFormatString", "Duplicates"})
-@Service
+@Component
 public class UserService extends AbstractDbService {
 
     @Autowired
@@ -31,6 +33,46 @@ public class UserService extends AbstractDbService {
         }
     }
 
+    public UserFull getUserFull(String email) throws SQLException {
+        String query = "SELECT * FROM User WHERE email='" + email + "';";
+        Connection connection = DataSourceUtils.getConnection(dataSource);
+        final UserFull user;
+        user = executor.execQuery(connection, query, resultSet -> {
+            if (!resultSet.next())
+                return null;
+            return new UserFull(resultSet.getLong("id"),
+                    resultSet.getString("email"),
+                    resultSet.getString("username"),
+                    resultSet.getString("about"),
+                    resultSet.getString("name"),
+                    resultSet.getBoolean("isAnonymous"));
+        });
+
+
+        query = "SELECT follower FROM Follow WHERE followee='" + email + "';";
+        executor.execQuery(connection, query, resultSet -> {
+             while (resultSet.next())
+                 user.addFollower(resultSet.getString("follower"));
+            return null;
+        });
+
+        query = "SELECT followee FROM Follow WHERE follower='" + email + "';";
+        executor.execQuery(connection, query, resultSet -> {
+            while (resultSet.next())
+                user.addFollowee(resultSet.getString("followee"));
+            return null;
+        });
+
+        query = "SELECT thread FROM Subscription WHERE user='" + email + "';";
+        executor.execQuery(connection, query, resultSet -> {
+            while (resultSet.next())
+                user.addSubscription(resultSet.getLong("thread"));
+            return null;
+        });
+
+        return user;
+    }
+
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {
 
@@ -39,7 +81,7 @@ public class UserService extends AbstractDbService {
             query = format("INSERT IGNORE INTO User(email, isAnonymous) VALUES ('%s',1);", email);
         else
             query = format("INSERT IGNORE INTO User(email, username, name, about, isAnonymous) VALUES ('%s','%s','%s','%s',0);",
-                email, username, name, about);
+                    email, username, name, about);
         try {
             if (executor.execUpdate(getConnection(), query) == 0)
                 return null;
@@ -62,32 +104,10 @@ public class UserService extends AbstractDbService {
 
 
     public UserFull getUserDetails(String email) throws DbException {
-        final String query = format("SELECT User.*, GROUP_CONCAT(DISTINCT Followers.follower) AS followers, " +
-                "GROUP_CONCAT(DISTINCT Following.followee) AS followees, " +
-                "GROUP_CONCAT(DISTINCT Subs.thread) AS subscriptions " +
-                "FROM User " +
-                "LEFT JOIN Follow AS Followers ON (User.email=Followers.followee) " +
-                "LEFT JOIN Follow AS Following ON (User.email = Following.follower)  " +
-                "LEFT JOIN Subscription AS Subs ON (User.email = Subs.user) " +
-                "WHERE User.email='%s' GROUP BY  User.id;", email);
-        //System.out.println(formatter.toString());
         try {
-            return executor.execQuery(getConnection(), query, resultSet -> {
-                if (!resultSet.next())
-                    return null;
-                return new UserFull(
-                        resultSet.getLong("id"),
-                        resultSet.getString("email"),
-                        resultSet.getString("username"),
-                        resultSet.getString("about"),
-                        resultSet.getString("name"),
-                        resultSet.getBoolean("isAnonymous"),
-                        resultSet.getString("followers"),
-                        resultSet.getString("followees"),
-                        resultSet.getString("subscriptions"));
-            });
+            return getUserFull(email);
         } catch (SQLException e) {
-            throw new DbException("Unable to get user details!", e);
+            throw new DbException("Unable to get user!", e);
         }
     }
 
