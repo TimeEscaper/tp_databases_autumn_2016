@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.17, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.5.52, for debian-linux-gnu (x86_64)
 --
 -- Host: localhost    Database: ForumDB
 -- ------------------------------------------------------
--- Server version	5.7.17-0ubuntu0.16.04.1
+-- Server version	5.5.52-0+deb8u1-log
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -48,7 +48,7 @@ CREATE TABLE `Forum` (
   UNIQUE KEY `short_name` (`short_name`),
   KEY `user` (`user`),
   CONSTRAINT `Forum_ibfk_1` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,8 +78,11 @@ CREATE TABLE `Post` (
   PRIMARY KEY (`id`),
   KEY `thread` (`thread`),
   KEY `forum` (`forum`),
-  KEY `user` (`user`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
+  KEY `user` (`user`),
+  KEY `parent` (`parent`,`id`),
+  KEY `id` (`id`,`thread`),
+  KEY `root_parent` (`root_parent`,`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1000001 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -122,9 +125,10 @@ CREATE TABLE `Thread` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `Thread_Forum_short_name_fk` (`forum`),
+  KEY `id` (`id`,`posts`),
   CONSTRAINT `Thread_Forum_short_name_fk` FOREIGN KEY (`forum`) REFERENCES `Forum` (`short_name`),
   CONSTRAINT `Thread_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=10001 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -143,7 +147,7 @@ CREATE TABLE `User` (
   `isAnonymous` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=100001 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -155,4 +159,4 @@ CREATE TABLE `User` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-01-25 13:16:20
+-- Dump completed on 2017-01-25 14:04:18
