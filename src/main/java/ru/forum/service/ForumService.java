@@ -216,7 +216,7 @@ public class ForumService extends AbstractDbService {
     }
 
     public ArrayList<UserFull> listUsers(String forum, Integer since, Integer limit, String order) throws DbException {
-        String query = "SELECT Post.user FROM Post JOIN User ON (User.email=Post.user) WHERE Post.forum = '" +
+        String query = "SELECT User.email FROM User JOIN Post ON (Post.user=User.email) WHERE Post.forum = '" +
                 forum + "' ";
         if (since != null)
             query += " AND User.id >= " + since;
@@ -231,13 +231,13 @@ public class ForumService extends AbstractDbService {
         if (limit != null)
             query += " LIMIT " + limit.toString();
         query += ";";
-        
+
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<UserFull> result = new ArrayList<>();
                         while (resultSet.next()) {
-                            result.add(getService.getUserFull(resultSet.getString("Post.user")));
+                            result.add(getService.getUserFull(resultSet.getString("User.email")));
                         }
 
                         return result;
