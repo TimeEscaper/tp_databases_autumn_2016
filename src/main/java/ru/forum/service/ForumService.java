@@ -216,30 +216,28 @@ public class ForumService extends AbstractDbService {
     }
 
     public ArrayList<UserFull> listUsers(String forum, Integer since, Integer limit, String order) throws DbException {
-        String postfix = " WHERE User.email in (SELECT user FROM Post WHERE Post.forum = '" + forum + "\')";
+        String query = "SELECT Post.user FROM Post JOIN User ON (User.email=Post.user) WHERE Post.forum = '" +
+                forum + "' ";
         if (since != null)
-            postfix += " AND User.id >= " + since;
+            query += " AND User.id >= " + since;
         final String nullOrder;
         if ((order == null) || (order.equals("desc")))
             nullOrder = "asc";
         else
             nullOrder = "desc";
-        postfix += " GROUP BY User.id ";
-        postfix += " ORDER BY User.isAnonymous " + nullOrder + ", User.name "
+        query += " GROUP BY User.id ";
+        query += " ORDER BY User.isAnonymous " + nullOrder + ", User.name "
                 + ((order == null) ? "desc" : order) + ' ';
         if (limit != null)
-            postfix += " LIMIT " + limit.toString();
-        postfix += ";";
-
-
-        final String query = "SELECT User.email FROM User " + postfix;
-        //System.out.println(query);
+            query += " LIMIT " + limit.toString();
+        query += ";";
+        
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query,
                     resultSet -> {
                         final ArrayList<UserFull> result = new ArrayList<>();
                         while (resultSet.next()) {
-                            result.add(getService.getUserFull(resultSet.getString("User.email")));
+                            result.add(getService.getUserFull(resultSet.getString("Post.user")));
                         }
 
                         return result;
