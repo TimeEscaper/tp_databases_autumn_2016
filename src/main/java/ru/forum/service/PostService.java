@@ -220,7 +220,7 @@ public class PostService extends AbstractDbService {
     public ArrayList<PostFull> listPostsByThread(int thread,
                                                  String since, Integer limit, String order)
             throws DbException {
-        String query = "SELECT * FROM Post WHERE thread = '" + Integer.toString(thread) + '\'';
+        String query = "SELECT * FROM Post WHERE thread = " + Integer.toString(thread) + ' ';
         if (since != null) {
             query += " AND date >= '" + since + '\'';
         }
