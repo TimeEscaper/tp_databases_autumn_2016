@@ -27,12 +27,12 @@ import static ru.forum.helper.QueryHelper.format;
 @Component
 public class PostService extends AbstractDbService {
 
-    private UserService userService;
+    private GetService getService;
 
     @Autowired
-    public PostService(DataSource dataSource, UserService userService) throws DbException {
+    public PostService(DataSource dataSource, GetService getService) throws DbException {
         this.dataSource = dataSource;
-        this.userService = userService;
+        this.getService = getService;
     }
 
 
@@ -126,34 +126,8 @@ public class PostService extends AbstractDbService {
 
     public PostFull postDetails(long postId, List<String> related) throws DbException {
 
-        String postfix = " WHERE Post.id = " + Long.toString(postId);
-        postfix += " GROUP BY ";
-        String group = " Post.id;";
+        final String query = "SELECT Post.* FROM Post WHERE Post.id = " + Long.toString(postId);
 
-        if (related.contains("forum"))
-            group = " Forum.id, " + group;
-        if (related.contains("thread"))
-            group = " Thread.id, " + group;
-        postfix += group;
-
-        final StringBuilder tables = new StringBuilder("SELECT Post.*");
-        final StringBuilder joins = new StringBuilder(" FROM Post");
-
-        for (String table : related) {
-            switch (table) {
-                case "forum":
-                    tables.append(" , Forum.*");
-                    joins.append(" JOIN Forum ON(Post.forum = Forum.short_name)");
-                    break;
-                case "thread":
-                    tables.append(" , Thread.* ");
-                    joins.append(" JOIN Thread ON(Post.thread = Thread.id) ");
-                    break;
-            }
-        }
-
-        final String query = tables.toString() + joins + postfix;
-        //System.out.println(query);
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query,
                     resultSet -> {
@@ -174,35 +148,17 @@ public class PostService extends AbstractDbService {
                         );
 
                         if (related.contains("user")) {
-                            post.setUser(userService.getUserFull(resultSet.getString("Post.user")));
+                            post.setUser(getService.getUserFull(resultSet.getString("Post.user")));
                         } else {
                             post.setUser(resultSet.getString("Post.user"));
                         }
                         if (related.contains("forum")) {
-                            post.setForum(new ForumDataSet(
-                                    resultSet.getLong("Forum.id"),
-                                    resultSet.getString("Forum.name"),
-                                    resultSet.getString("Forum.short_name"),
-                                    resultSet.getString("Forum.user")
-                            ));
+                            post.setForum(getService.getForum(resultSet.getString("Post.forum")));
                         } else {
                             post.setForum(resultSet.getString("Post.forum"));
                         }
                         if (related.contains("thread")) {
-                            post.setThread(new ThreadDataSet(
-                                    resultSet.getLong("Thread.id"),
-                                    resultSet.getString("Thread.forum"),
-                                    resultSet.getString("Thread.user"),
-                                    resultSet.getString("Thread.date"),
-                                    resultSet.getString("Thread.title"),
-                                    resultSet.getString("Thread.slug"),
-                                    resultSet.getString("Thread.message"),
-                                    resultSet.getBoolean("Thread.isClosed"),
-                                    resultSet.getBoolean("Thread.isDeleted"),
-                                    resultSet.getLong("Thread.likes"),
-                                    resultSet.getLong("Thread.dislikes"),
-                                    resultSet.getLong("Thread.posts")
-                            ));
+                            post.setThread(getService.getThread(resultSet.getLong("Post.thread")));
                         } else {
                             post.setThread(resultSet.getLong("Post.thread"));
                         }

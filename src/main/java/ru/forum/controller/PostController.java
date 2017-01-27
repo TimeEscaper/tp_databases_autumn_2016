@@ -31,7 +31,7 @@ public class PostController {
 
     @RequestMapping(path = "/db/api/post/create/", method = RequestMethod.POST)
     public ResponseEntity createPost(@RequestBody CreatePostRequest request) {
-        System.out.print("/db/api/post/create/");
+        System.out.println("/db/api/post/create/");
         try {
             final PostDataSet post = postService.createPost(request.getDate(), request.getThread(), request.getMessage(),
                     request.getUser(), request.getForum(), request.getParent(), request.isApproved(),

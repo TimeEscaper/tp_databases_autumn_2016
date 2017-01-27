@@ -26,12 +26,12 @@ import static ru.forum.helper.QueryHelper.format;
 @Component
 public class ThreadService extends AbstractDbService {
 
-    UserService userService;
+    private GetService getService;
 
     @Autowired
-    public ThreadService(DataSource dataSource, UserService userService) throws DbException {
+    public ThreadService(DataSource dataSource, GetService getService) throws DbException {
         this.dataSource = dataSource;
-        this.userService = userService;
+        this.getService = getService;
     }
 
     public ThreadDataSet createThread(String forum, String title, String user, String date, String message,
@@ -53,7 +53,8 @@ public class ThreadService extends AbstractDbService {
                 forum, title, date);
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query, resultSet -> {
-                resultSet.next();
+                if (!resultSet.next())
+                    return null;
                 return new ThreadDataSet(
                         resultSet.getLong("id"),
                         resultSet.getString("forum"),
@@ -82,26 +83,8 @@ public class ThreadService extends AbstractDbService {
 
     public ThreadFull threadDetails(long threadId, ArrayList<String> related) throws DbException {
 
-        final boolean containsUser = related.contains("user");
-        final boolean containsForum = related.contains("forum");
+        final String query = "SELECT Thread.* FROM Thread WHERE Thread.id = " + Long.toString(threadId) + ';';
 
-        String postfix = " WHERE Thread.id = " + Long.toString(threadId);
-        postfix += " GROUP BY ";
-        String group = " Thread.id;";
-        if (containsForum)
-            group = " Forum.id, " + group;
-        postfix += group;
-
-        final StringBuilder tables = new StringBuilder("SELECT Thread.* ");
-        final StringBuilder joins = new StringBuilder(" FROM Thread ");
-
-        if (containsForum) {
-            tables.append(" , Forum.* ");
-            joins.append(" JOIN Forum ON(Thread.forum = Forum.short_name)");
-        }
-
-        final String query = tables.toString() + joins + postfix;
-        //System.out.println(query);
         try (Connection connection = getConnection()) {
             return executor.execQuery(connection, query,
                     resultSet -> {
@@ -121,19 +104,14 @@ public class ThreadService extends AbstractDbService {
                                 resultSet.getLong("Thread.posts")
                         );
 
-                        if (containsUser) {
-                            final UserFull userFull = userService.getUserFull(resultSet.getString("Thread.user"));
+                        if (related.contains("user")) {
+                            final UserFull userFull = getService.getUserFull(resultSet.getString("Thread.user"));
                             result.setUser(userFull);
                         } else {
                             result.setUser(resultSet.getString("Thread.user"));
                         }
-                        if (containsForum) {
-                            result.setForum(new ForumDataSet(
-                                    resultSet.getLong("Forum.id"),
-                                    resultSet.getString("Forum.name"),
-                                    resultSet.getString("Forum.short_name"),
-                                    resultSet.getString("Forum.user")
-                            ));
+                        if (related.contains("forum")) {
+                            result.setForum(getService.getForum(resultSet.getString("Thread.forum")));
                         } else {
                             result.setForum(resultSet.getString("Thread.forum"));
                         }

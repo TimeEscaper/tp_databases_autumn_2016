@@ -23,71 +23,14 @@ import static ru.forum.helper.QueryHelper.format;
 @Component
 public class UserService extends AbstractDbService {
 
+    private GetService getService;
+
     @Autowired
-    public UserService(DataSource dataSource) throws DbException {
+    public UserService(DataSource dataSource, GetService getService) throws DbException {
         this.dataSource = dataSource;
+        this.getService = getService;
     }
 
-    public UserFull getUserFull(String email) throws SQLException {
-        String query = "SELECT * FROM User WHERE email='" + email + "';";
-        final Connection connection = DataSourceUtils.getConnection(dataSource);
-        final UserFull user;
-        try {
-            user = executor.execQuery(connection, query, resultSet -> {
-                if (!resultSet.next())
-                    return null;
-                return new UserFull(resultSet.getLong("id"),
-                        resultSet.getString("email"),
-                        resultSet.getString("username"),
-                        resultSet.getString("about"),
-                        resultSet.getString("name"),
-                        resultSet.getBoolean("isAnonymous"));
-            });
-        } catch (SQLException e) {
-            connection.close();
-            throw e;
-        }
-
-
-        query = "SELECT follower FROM Follow WHERE followee='" + email + "';";
-        try {
-            executor.execQuery(connection, query, resultSet -> {
-                while (resultSet.next())
-                    user.addFollower(resultSet.getString("follower"));
-                return null;
-            });
-        } catch (SQLException e) {
-            connection.close();
-            throw e;
-        }
-
-        query = "SELECT followee FROM Follow WHERE follower='" + email + "';";
-        try {
-            executor.execQuery(connection, query, resultSet -> {
-                while (resultSet.next())
-                    user.addFollowee(resultSet.getString("followee"));
-                return null;
-            });
-        } catch (SQLException e) {
-            connection.close();
-            throw e;
-        }
-
-        query = "SELECT thread FROM Subscription WHERE user='" + email + "';";
-        try {
-            executor.execQuery(connection, query, resultSet -> {
-                while (resultSet.next())
-                    user.addSubscription(resultSet.getLong("thread"));
-                return null;
-            });
-        } catch (SQLException e) {
-            connection.close();
-            throw e;
-        }
-
-        connection.close();
-        return user;
-    }
 
     public UserDataSet createUser(String username, String about, String name, String email,
                                   boolean isAnonymous) throws DbException {
@@ -121,7 +64,7 @@ public class UserService extends AbstractDbService {
 
     public UserFull getUserDetails(String email) throws DbException {
         try {
-            return getUserFull(email);
+            return getService.getUserFull(email);
         } catch (SQLException e) {
             throw new DbException("Unable to get user!", e);
         }
@@ -212,7 +155,7 @@ public class UserService extends AbstractDbService {
             return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
-                    result.add(getUserFull(resultSet.getString("User.email")));
+                    result.add(getService.getUserFull(resultSet.getString("User.email")));
                 }
                 return result;
             });
@@ -239,7 +182,7 @@ public class UserService extends AbstractDbService {
             return executor.execQuery(connection, query, resultSet -> {
                 final List<UserFull> result = new ArrayList<>();
                 while (resultSet.next()) {
-                    result.add(getUserFull(resultSet.getString("User.email")));
+                    result.add(getService.getUserFull(resultSet.getString("User.email")));
                 }
                 return result;
             });
