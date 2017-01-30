@@ -25,7 +25,11 @@ DROP TABLE IF EXISTS `Follow`;
 CREATE TABLE `Follow` (
   `follower` varchar(127) NOT NULL,
   `followee` varchar(127) NOT NULL,
-  UNIQUE KEY `follower` (`follower`,`followee`)
+  UNIQUE KEY `follower` (`follower`,`followee`),
+  KEY `follower_2` (`follower`),
+  KEY `followee` (`followee`),
+  KEY `follower_3` (`follower`,`followee`),
+  KEY `followee_2` (`followee`,`follower`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -47,8 +51,10 @@ CREATE TABLE `Forum` (
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `short_name` (`short_name`),
   KEY `user` (`user`),
+  KEY `short_name_2` (`short_name`),
+  KEY `short_name_3` (`short_name`),
   CONSTRAINT `Forum_ibfk_1` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -79,10 +85,14 @@ CREATE TABLE `Post` (
   KEY `thread` (`thread`),
   KEY `forum` (`forum`),
   KEY `user` (`user`),
-  KEY `parent` (`parent`,`id`),
-  KEY `id` (`id`,`thread`),
-  KEY `root_parent` (`root_parent`,`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1000001 DEFAULT CHARSET=utf8;
+  KEY `forum_2` (`forum`,`date`),
+  KEY `thread_2` (`thread`,`date`),
+  KEY `forum_3` (`forum`,`user`),
+  KEY `thread_3` (`thread`) USING HASH,
+  CONSTRAINT `fk_forum` FOREIGN KEY (`forum`) REFERENCES `Forum` (`short_name`),
+  CONSTRAINT `fk_thread` FOREIGN KEY (`thread`) REFERENCES `Thread` (`id`),
+  CONSTRAINT `fk_user` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -97,6 +107,7 @@ CREATE TABLE `Subscription` (
   `user` varchar(127) DEFAULT NULL,
   UNIQUE KEY `thread` (`thread`,`user`),
   KEY `user` (`user`),
+  KEY `thread_2` (`thread`,`user`),
   CONSTRAINT `Subscription_ibfk_1` FOREIGN KEY (`thread`) REFERENCES `Thread` (`id`),
   CONSTRAINT `Subscription_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -125,10 +136,9 @@ CREATE TABLE `Thread` (
   PRIMARY KEY (`id`),
   KEY `user` (`user`),
   KEY `Thread_Forum_short_name_fk` (`forum`),
-  KEY `id` (`id`,`posts`),
   CONSTRAINT `Thread_Forum_short_name_fk` FOREIGN KEY (`forum`) REFERENCES `Forum` (`short_name`),
   CONSTRAINT `Thread_ibfk_2` FOREIGN KEY (`user`) REFERENCES `User` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=10001 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -146,8 +156,10 @@ CREATE TABLE `User` (
   `name` varchar(127) DEFAULT NULL,
   `isAnonymous` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=100001 DEFAULT CHARSET=utf8;
+  UNIQUE KEY `email` (`email`),
+  KEY `id` (`id`,`isAnonymous`),
+  KEY `email_2` (`email`,`isAnonymous`,`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -159,4 +171,4 @@ CREATE TABLE `User` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2017-01-25 14:04:18
+-- Dump completed on 2017-01-30 23:53:53

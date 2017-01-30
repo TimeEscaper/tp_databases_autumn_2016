@@ -103,7 +103,8 @@ public class ForumController {
                                       @RequestParam(value = "limit", required = false) Integer limit,
                                       @RequestParam(value = "order", required = false) String order,
                                       @RequestParam(value = "since_id", required = false) Integer since) {
-        System.out.println("/db/api/forum/listUsers/");
+        //return ResponseEntity.ok(new Response<>(0, new ArrayList<UserFull>()));
+	System.out.println("/db/api/forum/listUsers/");
         try {
             final List<UserFull> list = forumService.listUsers(shortName, since, limit, order);
             return ResponseEntity.ok(new Response<>(0, list));
